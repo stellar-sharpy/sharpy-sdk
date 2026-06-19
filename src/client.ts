@@ -46,6 +46,18 @@ export type SplitRule =
   | { type: "Percentage"; bps: number }
   | { type: "Tiered"; threshold: bigint; bps: number };
 
+export interface BatchInvoiceParams {
+  recipients: RecipientAmount[];
+  token: string;
+  deadline: number;
+}
+
+export interface AuditEntry {
+  action: string;
+  actor: string;
+  timestamp: number;
+}
+
 export interface Invoice {
   id?: number;
   version: number;
@@ -192,6 +204,36 @@ export class SharpyClient {
     if ("error" in sim) throw new Error(`Simulation failed: ${sim.error}`);
     const raw = scValToNative((sim as any).result.retval) as any;
     return mapInvoice(raw);
+  }
+
+  async createBatch(creator: string, invoices: BatchInvoiceParams[]): Promise<{ invoiceIds: number[]; txHash: string }> {
+    const batchArg = xdr.ScVal.scvVec(
+      invoices.map((inv) =>
+        xdr.ScVal.scvMap([
+          new xdr.ScMapEntry({ key: xdr.ScVal.scvSymbol("amounts"), val: nativeToScVal(inv.recipients.map((r) => r.amount), { type: "vec" }) }),
+          new xdr.ScMapEntry({ key: xdr.ScVal.scvSymbol("deadline"), val: nativeToScVal(inv.deadline, { type: "u64" }) }),
+          new xdr.ScMapEntry({ key: xdr.ScVal.scvSymbol("recipients"), val: nativeToScVal(inv.recipients.map((r) => new Address(r.address).toScVal()), { type: "vec" }) }),
+          new xdr.ScMapEntry({ key: xdr.ScVal.scvSymbol("token"), val: new Address(inv.token).toScVal() }),
+        ])
+      )
+    );
+    const args = [new Address(creator).toScVal(), batchArg];
+    const { txHash, result } = await this.buildAndSubmit(creator, "create_batch", args);
+    const ids = (scValToNative(result) as any[]).map(Number);
+    return { invoiceIds: ids, txHash };
+  }
+
+  async getAuditLog(invoiceId: number): Promise<AuditEntry[]> {
+    const account = await this.server.getAccount("GAAZI4TCR3TY5OJHCTJC2A4QSY6CJWJH5IAJTGKIN2ER7LBNVKOCCWN");
+    const contract = new Contract(this.config.contractId);
+    const tx = new TransactionBuilder(account, { fee: BASE_FEE, networkPassphrase: this.config.networkPassphrase })
+      .addOperation(contract.call("get_audit_log", nativeToScVal(invoiceId, { type: "u64" })))
+      .setTimeout(30)
+      .build();
+    const sim = await this.server.simulateTransaction(tx);
+    if ("error" in sim) throw new Error(`Simulation failed: ${sim.error}`);
+    const raw = scValToNative((sim as any).result.retval) as any[];
+    return raw.map((e) => ({ action: e.action, actor: e.actor, timestamp: Number(e.timestamp) }));
   }
 
   async getNextRecurring(invoiceId: number): Promise<number | null> {
