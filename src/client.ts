@@ -10,6 +10,7 @@ import {
 } from "@stellar/stellar-sdk";
 import { Server } from "@stellar/stellar-sdk/rpc";
 import { signTransaction } from "./wallet.js";
+import { DeadlinePassedError, InvoiceNotFoundError, InvoiceNotPendingError, OverpaymentError } from "./errors.js";
 
 export interface SharpyClientConfig {
   rpcUrl: string;
@@ -73,6 +74,16 @@ export interface Invoice {
   completionTime?: number;
 }
 
+function mapContractError(message: string, invoiceId?: number): Error {
+  const id = invoiceId ?? 0;
+  const m = message.toLowerCase();
+  if (m.includes("not found")) return new InvoiceNotFoundError(id);
+  if (m.includes("deadline")) return new DeadlinePassedError(id);
+  if (m.includes("not pending")) return new InvoiceNotPendingError(id);
+  if (m.includes("overpayment") || m.includes("exceeds") || m.includes("remaining balance")) return new OverpaymentError(id);
+  return new Error(message);
+}
+
 export class SharpyClient {
   private server: Server;
   private config: SharpyClientConfig;
@@ -85,7 +96,8 @@ export class SharpyClient {
   private async buildAndSubmit(
     sourcePublicKey: string,
     method: string,
-    args: xdr.ScVal[]
+    args: xdr.ScVal[],
+    invoiceId?: number
   ): Promise<{ txHash: string; result: xdr.ScVal }> {
     const account = await this.server.getAccount(sourcePublicKey);
     const contract = new Contract(this.config.contractId);
@@ -99,7 +111,7 @@ export class SharpyClient {
       .build();
 
     const simResult = await this.server.simulateTransaction(tx);
-    if ("error" in simResult) throw new Error(`Simulation failed: ${simResult.error}`);
+    if ("error" in simResult) throw mapContractError(`Simulation failed: ${simResult.error}`, invoiceId);
 
     const { assembleTransaction } = await import("@stellar/stellar-sdk/rpc");
     const assembled = assembleTransaction(tx, simResult) as any;
@@ -120,7 +132,7 @@ export class SharpyClient {
     }
 
     if (!getResult || getResult.status !== "SUCCESS") {
-      throw new Error(`Transaction failed: ${getResult?.status}`);
+      throw mapContractError(`Transaction failed: ${getResult?.status}`, invoiceId);
     }
 
     return {
@@ -162,19 +174,19 @@ export class SharpyClient {
       nativeToScVal(invoiceId, { type: "u64" }),
       nativeToScVal(amount, { type: "i128" }),
     ];
-    const { txHash } = await this.buildAndSubmit(payer, "pay", args);
+    const { txHash } = await this.buildAndSubmit(payer, "pay", args, invoiceId);
     return { txHash };
   }
 
   async releaseEscrow(caller: string, invoiceId: number): Promise<{ txHash: string }> {
     const args = [nativeToScVal(invoiceId, { type: "u64" })];
-    const { txHash } = await this.buildAndSubmit(caller, "release_escrow", args);
+    const { txHash } = await this.buildAndSubmit(caller, "release_escrow", args, invoiceId);
     return { txHash };
   }
 
   async refund(caller: string, invoiceId: number): Promise<{ txHash: string }> {
     const args = [nativeToScVal(invoiceId, { type: "u64" })];
-    const { txHash } = await this.buildAndSubmit(caller, "refund", args);
+    const { txHash } = await this.buildAndSubmit(caller, "refund", args, invoiceId);
     return { txHash };
   }
 
@@ -183,7 +195,7 @@ export class SharpyClient {
       new Address(caller).toScVal(),
       nativeToScVal(invoiceId, { type: "u64" }),
     ];
-    const { txHash } = await this.buildAndSubmit(caller, "cancel_invoice", args);
+    const { txHash } = await this.buildAndSubmit(caller, "cancel_invoice", args, invoiceId);
     return { txHash };
   }
 
@@ -201,7 +213,7 @@ export class SharpyClient {
       .build();
 
     const sim = await this.server.simulateTransaction(tx);
-    if ("error" in sim) throw new Error(`Simulation failed: ${sim.error}`);
+    if ("error" in sim) throw mapContractError(`Simulation failed: ${sim.error}`, invoiceId);
     const raw = scValToNative((sim as any).result.retval) as any;
     return mapInvoice(raw);
   }

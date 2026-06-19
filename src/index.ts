@@ -9,6 +9,7 @@ export type {
   Invoice,
   AuditEntry,
 } from "./client.js";
+export { InvoiceNotFoundError, DeadlinePassedError, InvoiceNotPendingError, OverpaymentError } from "./errors.js";
 export { connectWallet, getWalletPublicKey, signTransaction } from "./wallet.js";
 export { parseAmount, formatAmount, deadlineFromDays, isExpired, isValidAddress, truncateAddress, explorerUrl } from "./utils.js";
 
