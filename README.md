@@ -11,7 +11,7 @@ TypeScript SDK for the **Sharpy** advanced split payment contract on Stellar Sor
 
 ✅ Protocol 27 compatible — stellar-sdk upgraded to 16.0.1
 
-![Sharpy App Screenshot](https://sharpy-sigma.vercel.app/sharpy.png)
+<img width="767" height="354" alt="sharpy" src="https://github.com/user-attachments/assets/8ac67307-2b20-47a8-a405-2771e6c6dc07" />
 
 ## Architecture
 
