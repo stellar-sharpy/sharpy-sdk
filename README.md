@@ -1,37 +1,72 @@
 # @stellar-sharpy/sdk
 
-TypeScript SDK for the Sharpy advanced split payment protocol on Stellar Soroban.
+![npm](https://img.shields.io/npm/v/@stellar-sharpy/sdk)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?logo=typescript)
+![stellar-sdk](https://img.shields.io/badge/stellar--sdk-16.0.1-6C63FF)
+![License](https://img.shields.io/badge/license-MIT-green)
 
-## Table of Contents
+TypeScript SDK for the **Sharpy** advanced split payment contract on Stellar Soroban.
 
-- [Overview](#overview)
-- [Installation](#installation)
-- [Quick Start](#quick-start)
-- [Configuration](#configuration)
-- [API Reference](#api-reference)
-  - [SharpyClient](#sharpyclient)
-  - [Wallet Helpers](#wallet-helpers)
-  - [Utilities](#utilities)
-  - [Types](#types)
-- [Networks](#networks)
-- [Error Handling](#error-handling)
-- [Development](#development)
-- [Contributing](#contributing)
-- [License](#license)
+## Architecture
 
-## Overview
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    @stellar-sharpy/sdk                       │
+│                                                             │
+│  ┌─────────────────────────────────────────────────────┐   │
+│  │                   SharpyClient                       │   │
+│  │                                                     │   │
+│  │  Invoice Methods          Read Methods              │   │
+│  │  ─────────────────        ────────────────          │   │
+│  │  createInvoice()          getInvoice()              │   │
+│  │  createBatch()            getAuditLog()             │   │
+│  │  createRecurring()        getNextRecurring()        │   │
+│  │  pay()                    getPayerTotal()           │   │
+│  │  poolPay()                                         │   │
+│  │  releaseEscrow()                                   │   │
+│  │  refund()                                          │   │
+│  │  cancelInvoice()                                   │   │
+│  └───────────────────────┬─────────────────────────────┘   │
+│                          │                                  │
+│  ┌───────────────────────▼─────────────────────────────┐   │
+│  │              Transaction Builder                     │   │
+│  │   build → simulate → sign → submit → poll           │   │
+│  └───────────────────────┬─────────────────────────────┘   │
+│                          │                                  │
+│        ┌─────────────────┴──────────────────┐              │
+│        │                                    │              │
+│  ┌─────▼──────┐                    ┌────────▼────────┐     │
+│  │  wallet.ts │                    │    utils.ts     │     │
+│  │            │                    │                 │     │
+│  │ Freighter  │                    │ parseAmount()   │     │
+│  │ connect    │                    │ formatAmount()  │     │
+│  │ sign       │                    │ deadlineFrom    │     │
+│  │ getAddress │                    │ isExpired()     │     │
+│  └────────────┘                    │ explorerUrl()   │     │
+│                                    └─────────────────┘     │
+└─────────────────────────────────────────────────────────────┘
+                          │
+                          ▼
+┌─────────────────────────────────────────────────────────────┐
+│              @stellar/stellar-sdk 16.0.1                     │
+│              Stellar Soroban RPC                             │
+│              Protocol 27 (Zipper) compatible                 │
+└─────────────────────────────────────────────────────────────┘
+```
 
-The Sharpy SDK provides a typed TypeScript interface to the Sharpy Soroban smart contract. It handles transaction construction, simulation, signing via Freighter, and submission to the Stellar network.
+## Protocol Compatibility
 
-The SDK is designed for use in browser environments with the Freighter wallet extension. All on-chain amounts use `bigint` (stroops) to avoid floating-point precision issues.
+| stellar-sdk | Protocol | Status |
+|-------------|----------|--------|
+| 16.0.1 | Protocol 27 (Zipper) | Current |
 
-## Installation
+## Install
 
 ```bash
 npm install @stellar-sharpy/sdk
 ```
 
-Or directly from GitHub:
+Or from GitHub:
 
 ```bash
 npm install https://github.com/stellar-sharpy/sharpy-sdk.git
@@ -40,16 +75,12 @@ npm install https://github.com/stellar-sharpy/sharpy-sdk.git
 ## Quick Start
 
 ```typescript
-import { SharpyClient, connectWallet, parseAmount, NETWORKS } from "@stellar-sharpy/sdk";
+import { SharpyClient, connectWallet, deadlineFromDays, parseAmount, NETWORKS } from "@stellar-sharpy/sdk";
 
-// Connect Freighter wallet
 const publicKey = await connectWallet();
-
-// Initialize client with testnet config
 const client = new SharpyClient(NETWORKS.testnet);
 
-// Create an invoice splitting 1000 USDC between two recipients
-const { invoiceId, txHash } = await client.createInvoice({
+const { invoiceId } = await client.createInvoice({
   creator: publicKey,
   recipients: [
     { address: "GABC...RECIPIENT1", amount: parseAmount("600") },
@@ -59,372 +90,83 @@ const { invoiceId, txHash } = await client.createInvoice({
   deadline: deadlineFromDays(7),
 });
 
-console.log(`Invoice #${invoiceId} created: ${txHash}`);
-
-// Pay toward the invoice
 await client.pay(publicKey, invoiceId, parseAmount("1000"));
 
-// Fetch invoice status
 const invoice = await client.getInvoice(invoiceId);
 console.log(invoice.status); // "Released"
 ```
 
-## Configuration
-
-### SharpyClientConfig
-
-```typescript
-interface SharpyClientConfig {
-  rpcUrl: string;           // Soroban RPC endpoint
-  networkPassphrase: string; // Stellar network passphrase
-  contractId: string;       // Deployed Sharpy contract ID
-}
-```
-
-Use the pre-built `NETWORKS` constants for testnet and mainnet configuration:
-
-```typescript
-import { NETWORKS } from "@stellar-sharpy/sdk";
-
-const client = new SharpyClient(NETWORKS.testnet);
-// or
-const client = new SharpyClient(NETWORKS.mainnet);
-```
-
 ## API Reference
 
-### SharpyClient
-
-#### `createInvoice(params)`
-
-Creates a single invoice on-chain.
+### `SharpyClient`
 
 ```typescript
-const { invoiceId, txHash } = await client.createInvoice({
-  creator: string,           // Payer's public key — must sign
-  recipients: RecipientAmount[],  // Array of { address, amount }
-  token: string,             // Token contract address
-  deadline: number,          // Unix timestamp
-  escrowEnabled?: boolean,   // Default: false
-  escrowReleaseDelay?: number, // Seconds to hold funds (if escrow enabled)
-  splitRules?: SplitRule[],  // Per-recipient split rules (optional)
-});
+new SharpyClient(config: SharpyClientConfig)
 ```
 
-Returns: `{ invoiceId: number, txHash: string }`
+| Field | Type | Description |
+|-------|------|-------------|
+| `rpcUrl` | `string` | Soroban RPC endpoint |
+| `networkPassphrase` | `string` | Stellar network passphrase |
+| `contractId` | `string` | Deployed contract ID |
 
-#### `createBatch(creator, invoices)`
+#### Methods
 
-Creates up to 10 invoices in a single transaction.
-
-```typescript
-const { invoiceIds, txHash } = await client.createBatch(publicKey, [
-  { recipients, token, deadline },
-  { recipients, token, deadline },
-]);
-```
-
-Returns: `{ invoiceIds: number[], txHash: string }`
-
-#### `createRecurring(params)`
-
-Creates a recurring invoice that auto-generates the next invoice upon release.
-
-```typescript
-const { invoiceId, txHash } = await client.createRecurring({
-  creator: string,
-  recipients: RecipientAmount[],
-  token: string,
-  deadline: number,
-  recurrenceInterval: number, // Seconds between invoices
-  maxRecurrences: number,     // 0 = infinite
-});
-```
-
-Returns: `{ invoiceId: number, txHash: string }`
-
-#### `pay(payer, invoiceId, amount)`
-
-Pay toward an invoice. Transfers tokens from the payer's wallet to the contract.
-
-```typescript
-const { txHash } = await client.pay(publicKey, invoiceId, parseAmount("500"));
-```
-
-Returns: `{ txHash: string }`
-
-Constraints:
-- Invoice must be in `Pending` status
-- Amount must not exceed the remaining unfunded balance
-- Invoice must not be past its deadline
-
-#### `releaseEscrow(caller, invoiceId)`
-
-Releases an escrow-held invoice once the delay period has passed.
-
-```typescript
-const { txHash } = await client.releaseEscrow(publicKey, invoiceId);
-```
-
-Returns: `{ txHash: string }`
-
-#### `refund(caller, invoiceId)`
-
-Refunds all payers after the deadline has passed and the invoice is not fully funded.
-
-```typescript
-const { txHash } = await client.refund(publicKey, invoiceId);
-```
-
-Returns: `{ txHash: string }`
-
-#### `cancelInvoice(caller, invoiceId)`
-
-Creator cancels an invoice. Refunds all payments if any have been made.
-
-```typescript
-const { txHash } = await client.cancelInvoice(publicKey, invoiceId);
-```
-
-Returns: `{ txHash: string }`
-
-#### `getInvoice(invoiceId)`
-
-Fetches the full invoice state from the contract. Does not require a wallet.
-
-```typescript
-const invoice = await client.getInvoice(1);
-console.log(invoice.status);    // "Pending" | "Released" | "Refunded" | "Cancelled"
-console.log(invoice.funded);    // bigint — total stroops funded
-console.log(invoice.recipients); // string[]
-console.log(invoice.amounts);   // bigint[]
-```
-
-Returns: `Invoice`
-
-#### `getAuditLog(invoiceId)`
-
-Returns the full audit trail for an invoice.
-
-```typescript
-const log = await client.getAuditLog(1);
-// [{ action: "pay", actor: "GABC...", timestamp: 1700000000 }, ...]
-```
-
-Returns: `AuditEntry[]`
-
-#### `getNextRecurring(invoiceId)`
-
-Returns the ID of the next invoice in a recurring chain, or `null` if none.
-
-```typescript
-const nextId = await client.getNextRecurring(1);
-```
-
-Returns: `number | null`
-
----
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `createInvoice(params)` | `Promise<{ invoiceId, txHash }>` | Create a new invoice |
+| `createBatch(creator, invoices[])` | `Promise<{ invoiceIds, txHash }>` | Batch create up to 10 invoices |
+| `createRecurring(params)` | `Promise<{ invoiceId, txHash }>` | Create recurring invoice |
+| `pay(payer, invoiceId, amount)` | `Promise<{ txHash }>` | Pay toward an invoice |
+| `releaseEscrow(caller, invoiceId)` | `Promise<{ txHash }>` | Release escrow-held funds |
+| `refund(caller, invoiceId)` | `Promise<{ txHash }>` | Refund invoice |
+| `cancelInvoice(caller, invoiceId)` | `Promise<{ txHash }>` | Cancel invoice |
+| `getInvoice(id)` | `Promise<Invoice>` | Fetch invoice by ID |
+| `getAuditLog(id)` | `Promise<AuditEntry[]>` | Full audit trail |
+| `getNextRecurring(id)` | `Promise<number \| null>` | Next recurring invoice ID |
 
 ### Wallet Helpers
 
-#### `connectWallet()`
-
-Connects the Freighter browser extension and returns the user's public key.
-
-```typescript
-const publicKey = await connectWallet();
-```
-
-Throws if Freighter is not installed or the user denies access.
-
-#### `getWalletPublicKey()`
-
-Returns the connected wallet's public key, or `null` if not connected.
-
-```typescript
-const key = await getWalletPublicKey();
-```
-
-#### `signTransaction(xdr, networkPassphrase)`
-
-Signs a transaction XDR string using Freighter and returns the signed XDR.
-
-```typescript
-const signed = await signTransaction(xdr, NETWORKS.testnet.networkPassphrase);
-```
-
----
+| Function | Returns | Description |
+|----------|---------|-------------|
+| `connectWallet()` | `Promise<string>` | Connect Freighter, return public key |
+| `getWalletPublicKey()` | `Promise<string \| null>` | Get connected wallet's public key |
+| `signTransaction(xdr, passphrase)` | `Promise<string>` | Sign a transaction XDR |
 
 ### Utilities
 
-#### `parseAmount(value)`
+| Function | Description |
+|----------|-------------|
+| `parseAmount(value)` | Parse USDC string to stroops (bigint) |
+| `formatAmount(stroops)` | Format stroops as USDC string |
+| `deadlineFromDays(days)` | Unix timestamp N days from now |
+| `isExpired(deadline)` | Check if deadline has passed |
+| `isValidAddress(address)` | Validate a Stellar G... address |
+| `truncateAddress(address)` | Truncate for display: `GABC...XYZ` |
+| `explorerUrl(network, id, type)` | Build Stellar Expert explorer URL |
 
-Converts a human-readable USDC string to stroops (bigint). USDC has 7 decimal places.
-
-```typescript
-parseAmount("100")      // 1_000_000_000n
-parseAmount("1.5")      // 15_000_000n
-parseAmount("0.0000001") // 1n
-```
-
-#### `formatAmount(stroops)`
-
-Converts stroops (bigint) to a human-readable USDC string.
-
-```typescript
-formatAmount(1_000_000_000n) // "100"
-formatAmount(15_000_000n)    // "1.5"
-```
-
-#### `deadlineFromDays(days)`
-
-Returns a Unix timestamp `days` days from now.
-
-```typescript
-deadlineFromDays(7) // Unix timestamp 7 days from now
-```
-
-#### `isExpired(deadline)`
-
-Returns `true` if the deadline has already passed.
-
-```typescript
-isExpired(invoice.deadline) // boolean
-```
-
-#### `isValidAddress(address)`
-
-Returns `true` if the string is a valid Stellar public key.
-
-```typescript
-isValidAddress("GABC...") // boolean
-```
-
-#### `truncateAddress(address)`
-
-Truncates a Stellar address for display.
-
-```typescript
-truncateAddress("GABCDEF...XYZ") // "GABC...RXYZ"
-```
-
-#### `explorerUrl(network, id, type)`
-
-Builds a Stellar Expert explorer URL.
-
-```typescript
-explorerUrl("testnet", txHash, "tx")
-explorerUrl("mainnet", contractId, "contract")
-```
-
----
-
-### Types
-
-```typescript
-interface RecipientAmount {
-  address: string;
-  amount: bigint;  // in stroops
-}
-
-interface Invoice {
-  version: number;
-  creator: string;
-  recipients: string[];
-  amounts: bigint[];
-  tokens: string[];
-  deadline: number;
-  funded: bigint;
-  status: "Pending" | "Released" | "Refunded" | "Cancelled";
-  escrowEnabled: boolean;
-  escrowReleaseDelay: number;
-  completionTime?: number;
-}
-
-interface AuditEntry {
-  action: string;
-  actor: string;
-  timestamp: number;
-}
-
-interface BatchInvoiceParams {
-  recipients: RecipientAmount[];
-  token: string;
-  deadline: number;
-}
-
-type SplitRule =
-  | { type: "Fixed"; amount: bigint }
-  | { type: "Percentage"; bps: number }
-  | { type: "Tiered"; threshold: bigint; bps: number };
-```
-
-## Networks
+### NETWORKS Constant
 
 ```typescript
 import { NETWORKS } from "@stellar-sharpy/sdk";
 
-NETWORKS.testnet = {
-  rpcUrl: "https://soroban-testnet.stellar.org",
-  networkPassphrase: "Test SDF Network ; September 2015",
-  contractId: "CAYTIFPD6RFWVHMK5SPPUUIWWAAANHKOJB6GOAJS5SR5MBKZMEY2UODZ",
-}
-
-NETWORKS.mainnet = {
-  rpcUrl: "https://mainnet.sorobanrpc.com",
-  networkPassphrase: "Public Global Stellar Network ; September 2015",
-  contractId: "", // coming soon
-}
+NETWORKS.testnet // { rpcUrl, networkPassphrase, contractId }
+NETWORKS.mainnet // { rpcUrl, networkPassphrase, contractId }
 ```
 
-## Error Handling
-
-All async methods throw a standard `Error` with a descriptive message. Wrap calls in try/catch:
-
-```typescript
-try {
-  const { txHash } = await client.pay(publicKey, invoiceId, amount);
-} catch (err) {
-  console.error(err.message);
-  // Examples:
-  // "invoice is not pending"
-  // "payment exceeds remaining balance"
-  // "Simulation failed: ..."
-  // "Transaction failed: ERROR"
-}
-```
-
-## Development
-
-### Prerequisites
-
-- Node.js 20+
-- npm 9+
-
-### Setup
+## Build
 
 ```bash
-git clone https://github.com/stellar-sharpy/sharpy-sdk.git
-cd sharpy-sdk
-npm install
-```
-
-### Build
-
-```bash
-npm run build   # Outputs ESM, CJS, and TypeScript declarations to dist/
-npm run dev     # Watch mode
-```
-
-### Lint
-
-```bash
+npm run build   # tsup → ESM + CJS + TypeScript declarations
 npm run lint    # tsc --noEmit
 ```
 
-## Contributing
+## Related Repos
 
-See [CONTRIBUTING.md](CONTRIBUTING.md).
+| Repo | Description |
+|------|-------------|
+| [sharpy-contracts](https://github.com/stellar-sharpy/sharpy-contracts) | Soroban smart contract |
+| [sharpy-app](https://github.com/stellar-sharpy/sharpy-app) | Next.js frontend |
 
 ## License
 
