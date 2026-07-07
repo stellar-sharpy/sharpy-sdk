@@ -7,69 +7,14 @@
 
 TypeScript SDK for the **Sharpy** advanced split payment contract on Stellar Soroban.
 
-## Architecture
+## Status
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    @stellar-sharpy/sdk                       │
-│                                                             │
-│  ┌─────────────────────────────────────────────────────┐   │
-│  │                   SharpyClient                       │   │
-│  │                                                     │   │
-│  │  Invoice Methods          Read Methods              │   │
-│  │  ─────────────────        ────────────────          │   │
-│  │  createInvoice()          getInvoice()              │   │
-│  │  createBatch()            getAuditLog()             │   │
-│  │  createRecurring()        getNextRecurring()        │   │
-│  │  pay()                    getPayerTotal()           │   │
-│  │  poolPay()                                         │   │
-│  │  releaseEscrow()                                   │   │
-│  │  refund()                                          │   │
-│  │  cancelInvoice()                                   │   │
-│  └───────────────────────┬─────────────────────────────┘   │
-│                          │                                  │
-│  ┌───────────────────────▼─────────────────────────────┐   │
-│  │              Transaction Builder                     │   │
-│  │   build → simulate → sign → submit → poll           │   │
-│  └───────────────────────┬─────────────────────────────┘   │
-│                          │                                  │
-│        ┌─────────────────┴──────────────────┐              │
-│        │                                    │              │
-│  ┌─────▼──────┐                    ┌────────▼────────┐     │
-│  │  wallet.ts │                    │    utils.ts     │     │
-│  │            │                    │                 │     │
-│  │ Freighter  │                    │ parseAmount()   │     │
-│  │ connect    │                    │ formatAmount()  │     │
-│  │ sign       │                    │ deadlineFrom    │     │
-│  │ getAddress │                    │ isExpired()     │     │
-│  └────────────┘                    │ explorerUrl()   │     │
-│                                    └─────────────────┘     │
-└─────────────────────────────────────────────────────────────┘
-                          │
-                          ▼
-┌─────────────────────────────────────────────────────────────┐
-│              @stellar/stellar-sdk 16.0.1                     │
-│              Stellar Soroban RPC                             │
-│              Protocol 27 (Zipper) compatible                 │
-└─────────────────────────────────────────────────────────────┘
-```
-
-## Protocol Compatibility
-
-| stellar-sdk | Protocol | Status |
-|-------------|----------|--------|
-| 16.0.1 | Protocol 27 (Zipper) | Current |
+✅ Protocol 27 compatible — stellar-sdk upgraded to 16.0.1
 
 ## Install
 
 ```bash
 npm install @stellar-sharpy/sdk
-```
-
-Or from GitHub:
-
-```bash
-npm install https://github.com/stellar-sharpy/sharpy-sdk.git
 ```
 
 ## Quick Start
@@ -115,14 +60,17 @@ new SharpyClient(config: SharpyClientConfig)
 | Method | Returns | Description |
 |--------|---------|-------------|
 | `createInvoice(params)` | `Promise<{ invoiceId, txHash }>` | Create a new invoice |
-| `createBatch(creator, invoices[])` | `Promise<{ invoiceIds, txHash }>` | Batch create up to 10 invoices |
+| `createBatch(creator, invoices[])` | `Promise<{ invoiceIds, txHash }>` | Create up to 10 invoices |
 | `createRecurring(params)` | `Promise<{ invoiceId, txHash }>` | Create recurring invoice |
 | `pay(payer, invoiceId, amount)` | `Promise<{ txHash }>` | Pay toward an invoice |
+| `poolPay(payer, payments[])` | `Promise<{ txHash }>` | Pay multiple invoices |
 | `releaseEscrow(caller, invoiceId)` | `Promise<{ txHash }>` | Release escrow-held funds |
 | `refund(caller, invoiceId)` | `Promise<{ txHash }>` | Refund invoice |
 | `cancelInvoice(caller, invoiceId)` | `Promise<{ txHash }>` | Cancel invoice |
 | `getInvoice(id)` | `Promise<Invoice>` | Fetch invoice by ID |
+| `getInvoiceStats(id)` | `Promise<InvoiceStats>` | Fetch funded/total/completion_bps |
 | `getAuditLog(id)` | `Promise<AuditEntry[]>` | Full audit trail |
+| `getPayerTotal(id, payer)` | `Promise<bigint>` | Total paid by address |
 | `getNextRecurring(id)` | `Promise<number \| null>` | Next recurring invoice ID |
 
 ### Wallet Helpers
@@ -130,7 +78,7 @@ new SharpyClient(config: SharpyClientConfig)
 | Function | Returns | Description |
 |----------|---------|-------------|
 | `connectWallet()` | `Promise<string>` | Connect Freighter, return public key |
-| `getWalletPublicKey()` | `Promise<string \| null>` | Get connected wallet's public key |
+| `getWalletPublicKey()` | `Promise<string \| null>` | Get connected public key |
 | `signTransaction(xdr, passphrase)` | `Promise<string>` | Sign a transaction XDR |
 
 ### Utilities
@@ -154,19 +102,42 @@ NETWORKS.testnet // { rpcUrl, networkPassphrase, contractId }
 NETWORKS.mainnet // { rpcUrl, networkPassphrase, contractId }
 ```
 
+## Error Handling
+
+The SDK exports typed error classes:
+
+```typescript
+import { SharplyError, InvoiceNotFoundError, TransactionFailedError } from "@stellar-sharpy/sdk";
+
+try {
+  const invoice = await client.getInvoice(99);
+} catch (e) {
+  if (e instanceof InvoiceNotFoundError) {
+    // handle gracefully
+  }
+}
+```
+
 ## Build
 
 ```bash
-npm run build   # tsup → ESM + CJS + TypeScript declarations
+npm run build   # tsup — ESM + CJS + TypeScript declarations
 npm run lint    # tsc --noEmit
+npm test        # vitest
 ```
+
+## Protocol Compatibility
+
+| stellar-sdk | Protocol | Status |
+|-------------|----------|--------|
+| 16.0.1 | 27 | ✅ Current |
 
 ## Related Repos
 
 | Repo | Description |
 |------|-------------|
 | [sharpy-contracts](https://github.com/stellar-sharpy/sharpy-contracts) | Soroban smart contract |
-| [sharpy-app](https://github.com/stellar-sharpy/sharpy-app) | Next.js frontend |
+| [sharpy-app](https://github.com/stellar-sharpy/sharpy-app) | Next.js dApp |
 
 ## License
 
