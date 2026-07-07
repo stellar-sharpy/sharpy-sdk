@@ -11,6 +11,24 @@ TypeScript SDK for the **Sharpy** advanced split payment contract on Stellar Sor
 
 ✅ Protocol 27 compatible — stellar-sdk upgraded to 16.0.1
 
+![Sharpy App Screenshot](https://sharpy-sigma.vercel.app/sharpy.png)
+
+## Architecture
+
+```mermaid
+graph LR
+    App["sharpy-app\nNext.js 14"]
+    SDK["@stellar-sharpy/sdk"]
+    Freighter["Freighter Wallet"]
+    RPC["Soroban RPC"]
+    Contract["Sharpy Contract\nProtocol 27"]
+
+    App -->|"createInvoice / pay"| SDK
+    Freighter -->|"signTransaction"| SDK
+    SDK -->|"simulate + submit"| RPC
+    RPC -->|"executes"| Contract
+```
+
 ## Install
 
 ```bash
