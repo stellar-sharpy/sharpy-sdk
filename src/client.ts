@@ -148,8 +148,8 @@ export class SharpyClient {
   async createInvoice(params: CreateInvoiceParams): Promise<{ invoiceId: number; txHash: string }> {
     const args = [
       new Address(params.creator).toScVal(),
-      nativeToScVal(params.recipients.map((r) => new Address(r.address).toScVal()), { type: "vec" }),
-      nativeToScVal(params.recipients.map((r) => r.amount), { type: "vec" }),
+      nativeToScVal(params.recipients.map((r) => new Address(r.address).toScVal())),
+      nativeToScVal(params.recipients.map((r) => r.amount)),
       new Address(params.token).toScVal(),
       nativeToScVal(params.deadline, { type: "u64" }),
       buildInvoiceOptions(params),
@@ -165,8 +165,8 @@ export class SharpyClient {
   async createRecurring(params: CreateRecurringParams): Promise<{ invoiceId: number; txHash: string }> {
     const args = [
       new Address(params.creator).toScVal(),
-      nativeToScVal(params.recipients.map((r) => new Address(r.address).toScVal()), { type: "vec" }),
-      nativeToScVal(params.recipients.map((r) => r.amount), { type: "vec" }),
+      nativeToScVal(params.recipients.map((r) => new Address(r.address).toScVal())),
+      nativeToScVal(params.recipients.map((r) => r.amount)),
       new Address(params.token).toScVal(),
       nativeToScVal(params.deadline, { type: "u64" }),
       nativeToScVal(params.recurrenceInterval, { type: "u64" }),
@@ -261,9 +261,9 @@ export class SharpyClient {
     const batchArg = xdr.ScVal.scvVec(
       invoices.map((inv) =>
         xdr.ScVal.scvMap([
-          new xdr.ScMapEntry({ key: xdr.ScVal.scvSymbol("amounts"), val: nativeToScVal(inv.recipients.map((r) => r.amount), { type: "vec" }) }),
+          new xdr.ScMapEntry({ key: xdr.ScVal.scvSymbol("amounts"), val: nativeToScVal(inv.recipients.map((r) => r.amount)) }),
           new xdr.ScMapEntry({ key: xdr.ScVal.scvSymbol("deadline"), val: nativeToScVal(inv.deadline, { type: "u64" }) }),
-          new xdr.ScMapEntry({ key: xdr.ScVal.scvSymbol("recipients"), val: nativeToScVal(inv.recipients.map((r) => new Address(r.address).toScVal()), { type: "vec" }) }),
+          new xdr.ScMapEntry({ key: xdr.ScVal.scvSymbol("recipients"), val: nativeToScVal(inv.recipients.map((r) => new Address(r.address).toScVal())) }),
           new xdr.ScMapEntry({ key: xdr.ScVal.scvSymbol("token"), val: new Address(inv.token).toScVal() }),
         ])
       )
