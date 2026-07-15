@@ -38,6 +38,7 @@ npm install @stellar-sharpy/sdk
 
 - [Frontend dApp](https://sharpy-sigma.vercel.app)
 - [Pitch Deck](https://gamma.app/docs/Split-Payments-on-Stellar-s0et8z1agtva59n)
+- [Demo Script](https://app.notion.com/p/39ea94bd556e800d8cbff3aa4cfc9ea6)
 
 ---
 
