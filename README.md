@@ -36,6 +36,9 @@ graph LR
 npm install @stellar-sharpy/sdk
 ```
 
+- [Frontend dApp](https://sharpy-sigma.vercel.app)
+- [Pitch Deck](https://gamma.app/docs/Split-Payments-on-Stellar-s0et8z1agtva59n)
+
 ---
 
 ## Quick Start
