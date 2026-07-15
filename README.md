@@ -150,6 +150,13 @@ npm test        # vitest
 |-------------|----------|--------|
 | 16.0.1 | 27 | ✅ Current |
 
+## Protocol 25/26 Features
+
+| Method | CAP | Description |
+|--------|-----|-------------|
+| `bumpInvoiceTtl(caller, invoiceId)` | CAP-78 | Extend invoice storage TTL — prevents archival of long-lived invoices |
+| `getInvoiceFingerprint(invoiceId)` | CAP-75/82 | SHA-256 tamper-evident content hash for off-chain verification |
+
 ## Related Repos
 
 | Repo | Description |
