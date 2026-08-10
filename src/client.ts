@@ -235,7 +235,7 @@ export class SharpyClient {
    */
   async getInvoice(invoiceId: number): Promise<Invoice> {
     const account = await this.server.getAccount(
-      "GAAZI4TCR3TY5OJHCTJC2A4QSY6CJWJH5IAJTGKIN2ER7LBNVKOCCWN" // read-only placeholder
+      "GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF" // read-only placeholder
     );
     const contract = new Contract(this.config.contractId);
     const tx = new TransactionBuilder(account, {
@@ -279,7 +279,7 @@ export class SharpyClient {
    * @returns Array of audit entries with action, actor, and timestamp
    */
   async getAuditLog(invoiceId: number): Promise<AuditEntry[]> {
-    const account = await this.server.getAccount("GAAZI4TCR3TY5OJHCTJC2A4QSY6CJWJH5IAJTGKIN2ER7LBNVKOCCWN");
+    const account = await this.server.getAccount("GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF");
     const contract = new Contract(this.config.contractId);
     const tx = new TransactionBuilder(account, { fee: BASE_FEE, networkPassphrase: this.config.networkPassphrase })
       .addOperation(contract.call("get_audit_log", nativeToScVal(invoiceId, { type: "u64" })))
@@ -296,7 +296,7 @@ export class SharpyClient {
    */
   async getNextRecurring(invoiceId: number): Promise<number | null> {
     const account = await this.server.getAccount(
-      "GAAZI4TCR3TY5OJHCTJC2A4QSY6CJWJH5IAJTGKIN2ER7LBNVKOCCWN"
+      "GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF"
     );
     const contract = new Contract(this.config.contractId);
     const tx = new TransactionBuilder(account, {
@@ -338,7 +338,7 @@ export class SharpyClient {
    * @returns Total paid in stroops
    */
   async getPayerTotal(invoiceId: number, payer: string): Promise<bigint> {
-    const account = await this.server.getAccount("GAAZI4TCR3TY5OJHCTJC2A4QSY6CJWJH5IAJTGKIN2ER7LBNVKOCCWN");
+    const account = await this.server.getAccount("GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF");
     const contract = new Contract(this.config.contractId);
     const tx = new TransactionBuilder(account, { fee: BASE_FEE, networkPassphrase: this.config.networkPassphrase })
       .addOperation(contract.call(
@@ -357,7 +357,7 @@ export class SharpyClient {
    * @param invoiceId Invoice ID
    */
   async getInvoiceStats(invoiceId: number): Promise<{ funded: bigint; total: bigint; paymentCount: number; uniquePayers: number; completionBps: number }> {
-    const account = await this.server.getAccount("GAAZI4TCR3TY5OJHCTJC2A4QSY6CJWJH5IAJTGKIN2ER7LBNVKOCCWN");
+    const account = await this.server.getAccount("GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF");
     const contract = new Contract(this.config.contractId);
     const tx = new TransactionBuilder(account, { fee: BASE_FEE, networkPassphrase: this.config.networkPassphrase })
       .addOperation(contract.call("get_invoice_stats", nativeToScVal(invoiceId, { type: "u64" })))
@@ -397,7 +397,7 @@ export class SharpyClient {
    * @returns 32-byte hex string (SHA-256 hash)
    */
   async getInvoiceFingerprint(invoiceId: number): Promise<string> {
-    const account = await this.server.getAccount("GAAZI4TCR3TY5OJHCTJC2A4QSY6CJWJH5IAJTGKIN2ER7LBNVKOCCWN");
+    const account = await this.server.getAccount("GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF");
     const contract = new Contract(this.config.contractId);
     const tx = new TransactionBuilder(account, { fee: BASE_FEE, networkPassphrase: this.config.networkPassphrase })
       .addOperation(contract.call("get_invoice_fingerprint", nativeToScVal(invoiceId, { type: "u64" })))
@@ -422,7 +422,7 @@ export class SharpyClient {
    * @returns Array of bigint amounts per recipient (same order as invoice.recipients)
    */
   async previewPayout(invoiceId: number, amount: bigint): Promise<bigint[]> {
-    const account = await this.server.getAccount("GAAZI4TCR3TY5OJHCTJC2A4QSY6CJWJH5IAJTGKIN2ER7LBNVKOCCWN");
+    const account = await this.server.getAccount("GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF");
     const contract = new Contract(this.config.contractId);
     const tx = new TransactionBuilder(account, { fee: BASE_FEE, networkPassphrase: this.config.networkPassphrase })
       .addOperation(contract.call(
@@ -445,7 +445,7 @@ export class SharpyClient {
    * @returns Array of invoice IDs created by this address
    */
   async getInvoicesByCreator(creator: string): Promise<number[]> {
-    const account = await this.server.getAccount("GAAZI4TCR3TY5OJHCTJC2A4QSY6CJWJH5IAJTGKIN2ER7LBNVKOCCWN");
+    const account = await this.server.getAccount("GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF");
     const contract = new Contract(this.config.contractId);
     const tx = new TransactionBuilder(account, { fee: BASE_FEE, networkPassphrase: this.config.networkPassphrase })
       .addOperation(contract.call("get_invoices_by_creator", new Address(creator).toScVal()))
@@ -479,7 +479,7 @@ export class SharpyClient {
    * @returns Claimable balance in stroops
    */
   async getClaimableBalance(account: string, token: string): Promise<bigint> {
-    const acc = await this.server.getAccount("GAAZI4TCR3TY5OJHCTJC2A4QSY6CJWJH5IAJTGKIN2ER7LBNVKOCCWN");
+    const acc = await this.server.getAccount("GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF");
     const contract = new Contract(this.config.contractId);
     const tx = new TransactionBuilder(acc, { fee: BASE_FEE, networkPassphrase: this.config.networkPassphrase })
       .addOperation(contract.call(
