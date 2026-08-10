@@ -1,5 +1,13 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+- `previewPayout(invoiceId, amount)` — preview exact per-recipient payouts with dust-correct rounding (Protocol 25/26 CAP-82)
+- `getInvoicesByCreator(creator)` — fetch all invoice IDs created by an address using on-chain creator index
+- `claim(account, token)` — withdraw credited balance after failed recipient transfer (fallback recovery)
+- `getClaimableBalance(account, token)` — query internal credited balance for account/token pair
+
 ## [0.2.0] - 2026-07-18
 
 ### Added
