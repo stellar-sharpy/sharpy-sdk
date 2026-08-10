@@ -16,6 +16,7 @@ export interface SharpyClientConfig {
   rpcUrl: string;
   networkPassphrase: string;
   contractId: string;
+  signTransaction?: (xdr: string, networkPassphrase: string) => Promise<string>;
 }
 
 export interface RecipientAmount {
@@ -497,6 +498,10 @@ export class SharpyClient {
 
 function buildInvoiceOptions(params: CreateInvoiceParams): xdr.ScVal {
   return xdr.ScVal.scvMap([
+    new xdr.ScMapEntry({
+      key: xdr.ScVal.scvSymbol("arbitrator"),
+      val: xdr.ScVal.scvVec([]),
+    }),
     new xdr.ScMapEntry({
       key: xdr.ScVal.scvSymbol("auto_resolve_rules"),
       val: xdr.ScVal.scvVec([]),
