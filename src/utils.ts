@@ -1,9 +1,10 @@
-const STROOPS_PER_UNIT = 10_000_000n;
+// USDC and most tokens use 6 decimals, XLM uses 7
+const STROOPS_PER_UNIT = 1_000_000n;  // Changed from 10_000_000 for USDC compatibility
 
 export function parseAmount(value: string): bigint {
   const parts = value.split(".");
   const whole = parts[0] ?? "0";
-  const frac = (parts[1] ?? "").slice(0, 7).padEnd(7, "0");
+  const frac = (parts[1] ?? "").slice(0, 6).padEnd(6, "0");  // Changed from 7 to 6
   return BigInt(whole) * STROOPS_PER_UNIT + BigInt(frac);
 }
 
@@ -11,7 +12,7 @@ export function formatAmount(stroops: bigint): string {
   const whole = stroops / STROOPS_PER_UNIT;
   const frac = stroops % STROOPS_PER_UNIT;
   if (frac === 0n) return whole.toString();
-  return `${whole}.${frac.toString().padStart(7, "0").replace(/0+$/, "")}`;
+  return `${whole}.${frac.toString().padStart(6, "0").replace(/0+$/, "")}`;  // Changed from 7 to 6
 }
 
 export function deadlineFromDays(days: number): number {
