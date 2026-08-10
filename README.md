@@ -124,6 +124,16 @@ new SharpyClient(config: SharpyClientConfig)
 | `getPayerTotal(id, payer)` | `Promise<bigint>` | Total amount paid by a specific address |
 | `getNextRecurring(id)` | `Promise<number \| null>` | Next invoice ID in recurring chain |
 | `getInvoiceFingerprint(id)` | `Promise<string>` | SHA-256 content hash (Protocol 25/26) |
+| `previewPayout(id, amount)` | `Promise<bigint[]>` | Preview exact per-recipient payouts with dust-correct rounding |
+| `getInvoicesByCreator(creator)` | `Promise<number[]>` | Fetch all invoice IDs created by an address (on-chain index) |
+| `getClaimableBalance(account, token)` | `Promise<bigint>` | Query internal credited balance after failed transfer |
+
+#### Fallback Recovery Methods
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `claim(account, token)` | `Promise<{ amount, txHash }>` | Withdraw credited balance after failed recipient transfer |
+| `getClaimableBalance(account, token)` | `Promise<bigint>` | Query claimable balance for account/token |
 
 #### Protocol 25/26 Methods
 
@@ -131,6 +141,7 @@ new SharpyClient(config: SharpyClientConfig)
 |--------|---------|-----|-------------|
 | `bumpInvoiceTtl(caller, invoiceId)` | `Promise<{ txHash }>` | CAP-78 | Extend invoice storage TTL to prevent archival |
 | `getInvoiceFingerprint(invoiceId)` | `Promise<string>` | CAP-75/82 | SHA-256 tamper-evident content hash |
+| `previewPayout(invoiceId, amount)` | `Promise<bigint[]>` | CAP-82 | Preview split distribution with checked arithmetic |
 
 ---
 
