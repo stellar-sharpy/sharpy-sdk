@@ -150,7 +150,7 @@ export class SharpyClient {
       new Address(params.creator).toScVal(),
       nativeToScVal(params.recipients.map((r) => new Address(r.address).toScVal())),
       nativeToScVal(params.recipients.map((r) => r.amount)),
-      new Address(params.token).toScVal(),
+      nativeToScVal(params.recipients.map(() => new Address(params.token).toScVal())),
       nativeToScVal(params.deadline, { type: "u64" }),
       buildInvoiceOptions(params),
     ];
@@ -167,7 +167,7 @@ export class SharpyClient {
       new Address(params.creator).toScVal(),
       nativeToScVal(params.recipients.map((r) => new Address(r.address).toScVal())),
       nativeToScVal(params.recipients.map((r) => r.amount)),
-      new Address(params.token).toScVal(),
+      nativeToScVal(params.recipients.map(() => new Address(params.token).toScVal())),
       nativeToScVal(params.deadline, { type: "u64" }),
       nativeToScVal(params.recurrenceInterval, { type: "u64" }),
       nativeToScVal(params.maxRecurrences, { type: "u32" }),
