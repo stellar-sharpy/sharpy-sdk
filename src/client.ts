@@ -9,7 +9,6 @@ import {
   xdr,
 } from "@stellar/stellar-sdk";
 import { Server } from "@stellar/stellar-sdk/rpc";
-import { signTransaction } from "./wallet.js";
 import { DeadlinePassedError, InvoiceNotFoundError, InvoiceNotPendingError, OverpaymentError } from "./errors.js";
 
 export interface SharpyClientConfig {
@@ -73,6 +72,12 @@ export interface Invoice {
   escrowEnabled: boolean;
   escrowReleaseDelay: number;
   completionTime?: number;
+  payments?: any[]; // Payment history
+  claimed?: bigint[]; // Amounts claimed per recipient
+  frozen?: boolean; // Invoice frozen state
+  splitRules?: any[]; // Split rules per recipient
+  autoResolveRules?: any[]; // Auto-resolve rules
+  arbitrator?: string | null; // Escrow arbitrator address
 }
 
 function mapContractError(message: string, invoiceId?: number): Error {
@@ -108,15 +113,20 @@ export class SharpyClient {
       networkPassphrase: this.config.networkPassphrase,
     })
       .addOperation(contract.call(method, ...args))
-      .setTimeout(30)
+      .setTimeout(300) // 5 minutes — enough time for wallet popup + user signing
       .build();
 
     const simResult = await this.server.simulateTransaction(tx);
     if ("error" in simResult) throw mapContractError(`Simulation failed: ${simResult.error}`, invoiceId);
 
     const { assembleTransaction } = await import("@stellar/stellar-sdk/rpc");
-    const assembled = assembleTransaction(tx, simResult) as any;
-    const signed = await signTransaction(assembled.toXDR(), this.config.networkPassphrase);
+    const assembled = assembleTransaction(tx, simResult).build();
+
+    // Use the configured signTransaction function if provided, otherwise throw clear error
+    if (!this.config.signTransaction) {
+      throw new Error("No wallet connected. Please connect your wallet first.");
+    }
+    const signed = await this.config.signTransaction(assembled.toXDR(), this.config.networkPassphrase);
 
     const { TransactionBuilder: TB } = await import("@stellar/stellar-sdk");
     const signedTx = TB.fromXDR(signed, this.config.networkPassphrase);
@@ -150,7 +160,7 @@ export class SharpyClient {
     const args = [
       new Address(params.creator).toScVal(),
       nativeToScVal(params.recipients.map((r) => new Address(r.address).toScVal())),
-      nativeToScVal(params.recipients.map((r) => r.amount)),
+      nativeToScVal(params.recipients.map((r) => r.amount), { type: "i128" }),
       nativeToScVal(params.recipients.map(() => new Address(params.token).toScVal())),
       nativeToScVal(params.deadline, { type: "u64" }),
       buildInvoiceOptions(params),
@@ -167,7 +177,7 @@ export class SharpyClient {
     const args = [
       new Address(params.creator).toScVal(),
       nativeToScVal(params.recipients.map((r) => new Address(r.address).toScVal())),
-      nativeToScVal(params.recipients.map((r) => r.amount)),
+      nativeToScVal(params.recipients.map((r) => r.amount), { type: "i128" }),
       nativeToScVal(params.recipients.map(() => new Address(params.token).toScVal())),
       nativeToScVal(params.deadline, { type: "u64" }),
       nativeToScVal(params.recurrenceInterval, { type: "u64" }),
@@ -497,10 +507,13 @@ export class SharpyClient {
 }
 
 function buildInvoiceOptions(params: CreateInvoiceParams): xdr.ScVal {
+  // Soroban encodes Option<T> as: None → scvVoid(), Some(v) → the value directly (not wrapped).
+  // ScMap keys must be in lexicographic order to match the Rust #[contracttype] struct layout.
   return xdr.ScVal.scvMap([
     new xdr.ScMapEntry({
       key: xdr.ScVal.scvSymbol("arbitrator"),
-      val: xdr.ScVal.scvVec([]),
+      // Option<Address>: None = scvVoid(), Some(addr) = address ScVal
+      val: xdr.ScVal.scvVoid(),
     }),
     new xdr.ScMapEntry({
       key: xdr.ScVal.scvSymbol("auto_resolve_rules"),
@@ -512,9 +525,10 @@ function buildInvoiceOptions(params: CreateInvoiceParams): xdr.ScVal {
     }),
     new xdr.ScMapEntry({
       key: xdr.ScVal.scvSymbol("escrow_release_delay"),
+      // Option<u64>: None = scvVoid(), Some(v) = the u64 value directly
       val: params.escrowReleaseDelay
-        ? xdr.ScVal.scvVec([nativeToScVal(params.escrowReleaseDelay, { type: "u64" })])
-        : xdr.ScVal.scvVec([]),
+        ? nativeToScVal(params.escrowReleaseDelay, { type: "u64" })
+        : xdr.ScVal.scvVoid(),
     }),
     new xdr.ScMapEntry({
       key: xdr.ScVal.scvSymbol("split_rules"),
@@ -546,6 +560,16 @@ function encodeSplitRule(rule: SplitRule): xdr.ScVal {
 }
 
 function mapInvoice(raw: any): Invoice {
+  // Handle status enum - scValToNative might return {tag: "Pending", values: void} or just "Pending"
+  let status: "Pending" | "Released" | "Refunded" | "Cancelled";
+  if (typeof raw.status === "string") {
+    status = raw.status as any;
+  } else if (raw.status?.tag) {
+    status = raw.status.tag;
+  } else {
+    status = "Pending"; // fallback
+  }
+
   return {
     version: raw.version,
     creator: raw.creator,
@@ -554,9 +578,15 @@ function mapInvoice(raw: any): Invoice {
     tokens: raw.tokens,
     deadline: Number(raw.deadline),
     funded: BigInt(raw.funded),
-    status: raw.status,
+    status,
     escrowEnabled: raw.escrow_enabled,
     escrowReleaseDelay: Number(raw.escrow_release_delay),
     completionTime: raw.completion_time ? Number(raw.completion_time) : undefined,
+    payments: raw.payments || [],
+    claimed: raw.claimed?.map((c: any) => BigInt(c)) || [],
+    frozen: raw.frozen || false,
+    splitRules: raw.split_rules || [],
+    autoResolveRules: raw.auto_resolve_rules || [],
+    arbitrator: raw.arbitrator || null,
   };
 }
