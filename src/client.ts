@@ -542,6 +542,162 @@ export class SharpyClient {
     if ("error" in sim) throw new Error(`Simulation failed: ${sim.error}`);
     return BigInt(scValToNative((sim as any).result.retval) ?? 0);
   }
+  /**
+   * Builds the hookData buffer for a CCTP `depositForBurnWithHook` call targeting Stellar.
+   *
+   * Hook data layout (per Circle spec):
+   *   bytes  0–23: reserved magic bytes (all zero)
+   *   bytes 24–27: hook data version (uint32 BE, currently 0)
+   *   bytes 28–31: forwardRecipient byte length (uint32 BE)
+   *   bytes 32+  : forwardRecipient as UTF-8 encoded Stellar strkey (G…, C…, or M…)
+   *
+   * Both `mintRecipient` and `destinationCaller` on the EVM burn call must be set to
+   * the CctpForwarder contract address (bytes32 encoded), NOT the forwardRecipient.
+   *
+   * @param forwardRecipientStrkey - Stellar strkey of the final recipient (G…, C…, or M…)
+   * @returns Hex string (no 0x prefix) — pass as hookData to EVM depositForBurnWithHook
+   */
+  buildCctpHookData(forwardRecipientStrkey: string): string {
+    const isValid =
+      new Address(forwardRecipientStrkey) !== null; // will throw if invalid
+    void isValid;
+
+    const recipientBytes = Buffer.from(forwardRecipientStrkey, "utf8");
+    const hookData = Buffer.alloc(32 + recipientBytes.length);
+    // bytes 0–23: zeroed (reserved)
+    hookData.writeUInt32BE(0, 24);                  // hook version = 0
+    hookData.writeUInt32BE(recipientBytes.length, 28); // recipient byte length
+    recipientBytes.copy(hookData, 32);              // recipient strkey UTF-8
+    return hookData.toString("hex");
+  }
+
+  /**
+   * Polls the Circle CCTP attestation API until the transfer is fully attested.
+   * Returns the raw message hex and attestation hex needed to call completeCctpInbound.
+   *
+   * Circle attestation API endpoint:
+   *   GET https://iris-api-sandbox.circle.com/v2/messages/{sourceDomain}?transactionHash={txHash}
+   *
+   * @param sourceTxHash - EVM transaction hash of the depositForBurn call
+   * @param sourceDomain - CCTP domain of the source chain (e.g. 0=Ethereum, 3=Arbitrum, 6=Base)
+   * @param opts.intervalMs - Polling interval in ms (default 5000)
+   * @param opts.maxAttempts - Max polling attempts before giving up (default 60 = 5 minutes)
+   * @returns { message: string, attestation: string } — both hex strings
+   */
+  async pollCctpAttestation(
+    sourceTxHash: string,
+    sourceDomain: number,
+    opts?: { intervalMs?: number; maxAttempts?: number }
+  ): Promise<{ message: string; attestation: string }> {
+    const intervalMs = opts?.intervalMs ?? 5_000;
+    const maxAttempts = opts?.maxAttempts ?? 60;
+    const isTestnet = this.config.networkPassphrase.includes("Test SDF");
+    const apiBase = isTestnet
+      ? "https://iris-api-sandbox.circle.com"
+      : "https://iris-api.circle.com";
+
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      const res = await fetch(
+        `${apiBase}/v2/messages/${sourceDomain}?transactionHash=${sourceTxHash}`
+      );
+      if (res.ok) {
+        const data = await res.json() as any;
+        const messages: any[] = data?.messages ?? [];
+        const complete = messages.find((m: any) => m.status === "complete");
+        if (complete) {
+          return {
+            message: complete.message,
+            attestation: complete.attestation,
+          };
+        }
+      }
+      if (attempt < maxAttempts - 1) {
+        await new Promise((r) => setTimeout(r, intervalMs));
+      }
+    }
+    throw new Error(
+      `CCTP attestation not complete after ${maxAttempts} attempts (${(maxAttempts * intervalMs) / 1000}s). ` +
+      `Check status at: https://iris-api${isTestnet ? "-sandbox" : ""}.circle.com/v2/messages/${sourceDomain}?transactionHash=${sourceTxHash}`
+    );
+  }
+
+  /**
+   * Completes an inbound CCTP transfer by calling `mint_and_forward` on the
+   * CctpForwarder contract on Stellar.
+   *
+   * Prerequisites:
+   *  - The EVM `depositForBurnWithHook` was submitted with mintRecipient = destinationCaller = CctpForwarder
+   *  - The hook data encodes forwardRecipient as the invoice recipient / Sharpy contract
+   *  - Circle has attested the message (use pollCctpAttestation to wait for this)
+   *
+   * @param caller - Stellar address that will sign and submit the transaction
+   * @param message - Raw CCTP message hex from Circle attestation API
+   * @param attestation - Raw attestation hex from Circle attestation API
+   * @returns Transaction hash of the mint_and_forward invocation
+   */
+  async completeCctpInbound(
+    caller: string,
+    message: string,
+    attestation: string
+  ): Promise<{ txHash: string }> {
+    const isTestnet = this.config.networkPassphrase.includes("Test SDF");
+    const forwarderAddress = isTestnet
+      ? "CA66Q2WFBND6V4UEB7RD4SAXSVIWMD6RA4X3U32ELVFGXV5PJK4T4VSZ"
+      : "CBZL2IH7F6BIDAA3WBNXYKIXSATJGMSW7K5P5MJ6STX5RXN47TZJDF5T";
+
+    // CctpForwarder.mint_and_forward(message: Bytes, attestation: Bytes)
+    const messageBytes = Buffer.from(message.replace(/^0x/, ""), "hex");
+    const attestationBytes = Buffer.from(attestation.replace(/^0x/, ""), "hex");
+
+    const account = await this.server.getAccount(caller);
+    const contract = new Contract(forwarderAddress);
+    const tx = new TransactionBuilder(account, {
+      fee: BASE_FEE,
+      networkPassphrase: this.config.networkPassphrase,
+    })
+      .addOperation(
+        contract.call(
+          "mint_and_forward",
+          nativeToScVal(messageBytes, { type: "bytes" }),
+          nativeToScVal(attestationBytes, { type: "bytes" })
+        )
+      )
+      .setTimeout(300)
+      .build();
+
+    const simResult = await this.server.simulateTransaction(tx);
+    if ("error" in simResult) {
+      throw new Error(`CCTP mint_and_forward simulation failed: ${simResult.error}`);
+    }
+
+    const { assembleTransaction } = await import("@stellar/stellar-sdk/rpc");
+    const assembled = assembleTransaction(tx, simResult).build();
+
+    if (!this.config.signTransaction) {
+      throw new Error("No wallet connected. Please connect your wallet first.");
+    }
+    const signed = await this.config.signTransaction(assembled.toXDR(), this.config.networkPassphrase);
+    const { TransactionBuilder: TB } = await import("@stellar/stellar-sdk");
+    const signedTx = TB.fromXDR(signed, this.config.networkPassphrase);
+    const sendResult = await this.server.sendTransaction(signedTx);
+
+    if (sendResult.status === "ERROR") {
+      throw new Error(`CCTP inbound tx failed: ${JSON.stringify(sendResult.errorResult)}`);
+    }
+
+    let getResult;
+    for (let i = 0; i < 20; i++) {
+      await new Promise((r) => setTimeout(r, 1500));
+      getResult = await this.server.getTransaction(sendResult.hash);
+      if (getResult.status !== "NOT_FOUND") break;
+    }
+
+    if (!getResult || getResult.status !== "SUCCESS") {
+      throw new Error(`CCTP inbound tx did not confirm: ${getResult?.status}`);
+    }
+
+    return { txHash: sendResult.hash };
+  }
 }
 
 function buildInvoiceOptions(params: CreateInvoiceParams): xdr.ScVal {
