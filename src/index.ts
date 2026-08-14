@@ -17,7 +17,7 @@ export const NETWORKS = {
   testnet: {
     rpcUrl: "https://soroban-testnet.stellar.org",
     networkPassphrase: "Test SDF Network ; September 2015",
-    contractId: "CD4USMFARRFLM47FZTPH5QUXRY7MEXDBKLPA2Z5J23ZR7Y3AQEIMEMEL",
+    contractId: "CCMN5OYWBWVVRIB3IDE2CCODM3CMGSMYQ7EV2UVBJ23DVIH2CL6FJRXP",
   },
   mainnet: {
     rpcUrl: "https://mainnet.sorobanrpc.com",

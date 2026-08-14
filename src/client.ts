@@ -483,6 +483,44 @@ export class SharpyClient {
   }
 
   /**
+   * Returns the total number of invoices ever created on-chain.
+   * Reads the global counter directly — O(1), no iteration required.
+   * Useful for landing page stats, dashboards, and protocol analytics.
+   * @returns Total invoice count
+   */
+  async getInvoiceCount(): Promise<number> {
+    const account = await this.server.getAccount("GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF");
+    const contract = new Contract(this.config.contractId);
+    const tx = new TransactionBuilder(account, { fee: BASE_FEE, networkPassphrase: this.config.networkPassphrase })
+      .addOperation(contract.call("get_invoice_count"))
+      .setTimeout(30)
+      .build();
+    const sim = await this.server.simulateTransaction(tx);
+    if ("error" in sim) throw new Error(`Simulation failed: ${sim.error}`);
+    return Number(scValToNative((sim as any).result.retval) ?? 0);
+  }
+
+  /**
+   * Fetch all invoice IDs that a given address has paid toward.
+   * Indexed on every pay() call with deduplication — each invoice appears at most once.
+   * Use this to build a payer's payment history or "Invoices Paid" tab.
+   * @param payer - Payer address to query
+   * @returns Array of invoice IDs paid by this address
+   */
+  async getInvoicesByPayer(payer: string): Promise<number[]> {
+    const account = await this.server.getAccount("GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF");
+    const contract = new Contract(this.config.contractId);
+    const tx = new TransactionBuilder(account, { fee: BASE_FEE, networkPassphrase: this.config.networkPassphrase })
+      .addOperation(contract.call("get_invoices_by_payer", new Address(payer).toScVal()))
+      .setTimeout(30)
+      .build();
+    const sim = await this.server.simulateTransaction(tx);
+    if ("error" in sim) throw new Error(`Simulation failed: ${sim.error}`);
+    const raw = scValToNative((sim as any).result.retval) as any[];
+    return raw.map(Number);
+  }
+
+  /**
    * Query claimable balance for an account/token pair.
    * Returns the internal credited balance available for withdrawal via `claim()`.
    * @param account - Account address
