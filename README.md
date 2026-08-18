@@ -3,6 +3,7 @@
 ![npm](https://img.shields.io/npm/v/@stellar-sharpy/sdk)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?logo=typescript)
 ![stellar-sdk](https://img.shields.io/badge/stellar--sdk-16.0.1-6C63FF)
+![Modules](https://img.shields.io/badge/modules-35-00D4AA)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Version](https://img.shields.io/badge/version-0.2.0-6C63FF)
 [![Demo](https://img.shields.io/badge/Demo-Watch%20on%20Loom-00D4AA?logo=loom)](https://www.loom.com/share/09aa4a78e0c944dcab866a7036fde24d)
@@ -262,6 +263,41 @@ npm run dev      # watch mode
 npm run lint     # tsc --noEmit
 npm test         # vitest
 ```
+
+---
+
+## Module Overview
+
+The SDK ships 35 focused utility modules alongside the core client:
+
+| Module | Description |
+|--------|-------------|
+| `client.ts` | `SharpyClient` — all contract methods |
+| `wallet.ts` | Freighter v3 wallet helpers |
+| `utils.ts` | `parseAmount`, `formatAmount`, `deadlineFromDays`, etc. |
+| `errors.ts` | Typed error classes |
+| `retrylogic.ts` | Automatic retry for failed transactions |
+| `batchoperations.ts` | Batch operation helpers |
+| `eventlisteners.ts` | Contract event listener utilities |
+| `walletdetection.ts` | Wallet detection utilities |
+| `amountformatting.ts` | Amount formatting helpers |
+| `addressutils.ts` | Address validation utilities |
+| `transactionbuilder.ts` | Transaction builder utilities |
+| `simulationhelpers.ts` | Transaction simulation helpers |
+| `errorrecovery.ts` | Error recovery mechanisms |
+| `cachelayer.ts` | Response caching layer |
+| `paginationhelpers.ts` | Pagination utilities |
+| `typeguards.ts` | TypeScript type guard functions |
+| `networkswitching.ts` | Network switching utilities |
+| `webhooksupport.ts` | Webhook payload builders |
+| `invoicebuilders.ts` | Invoice builder patterns |
+| `asynchelpers.ts` | Async operation helpers |
+| `timeoutconfig.ts` | Configurable timeouts |
+| `loggingutils.ts` | Debug logging utilities |
+| `estimatefees.ts` | Fee estimation helpers |
+| `memosupport.ts` | Transaction memo support |
+| `sorobanutils.ts` | Soroban utility functions |
+| `contractinterfaces.ts` | Contract interface types |
 
 ---
 
