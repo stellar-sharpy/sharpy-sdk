@@ -25,3 +25,10 @@ export class OverpaymentError extends Error {
     this.name = "OverpaymentError";
   }
 }
+
+export class CallerNotCreatorError extends Error {
+  constructor(invoiceId: number) {
+    super(`Only the creator can cancel invoice #${invoiceId}`);
+    this.name = "CallerNotCreatorError";
+  }
+}
