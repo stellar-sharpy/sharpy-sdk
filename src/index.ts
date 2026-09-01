@@ -11,6 +11,7 @@ export type {
   SubscriptionParams,
   InvoiceNotes,
   DisputeState,
+  InvoiceStats,
 } from "./client.js";
 export { InvoiceNotFoundError, DeadlinePassedError, InvoiceNotPendingError, OverpaymentError, CallerNotCreatorError } from "./errors.js";
 export { connectWallet, getWalletPublicKey, signTransaction } from "./wallet.js";
