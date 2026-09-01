@@ -53,6 +53,16 @@ export interface BatchInvoiceParams {
   deadline: number;
 }
 
+export interface SubscriptionParams {
+  creator: string;
+  recipients: string[];
+  amounts: bigint[];
+  tokens: string[];
+  recurrenceInterval: number;
+  maxRecurrences: number;
+  numCreated: number;
+}
+
 export interface AuditEntry {
   action: string;
   actor: string;
@@ -342,6 +352,33 @@ export class SharpyClient {
     if ("error" in sim) throw new Error(`Simulation failed: ${sim.error}`);
     const raw = scValToNative((sim as any).result.retval);
     return raw ?? null;
+  }
+
+  /**
+   * Returns recurring subscription params for a recurring invoice (handoff #112).
+   * Returns null for non-recurring invoices.
+   * @param invoiceId Recurring invoice ID
+   */
+  async getRecurringParams(invoiceId: number): Promise<SubscriptionParams | null> {
+    const account = await this.server.getAccount("GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF");
+    const contract = new Contract(this.config.contractId);
+    const tx = new TransactionBuilder(account, { fee: BASE_FEE, networkPassphrase: this.config.networkPassphrase })
+      .addOperation(contract.call("get_recurring_params", nativeToScVal(invoiceId, { type: "u64" })))
+      .setTimeout(30)
+      .build();
+    const sim = await this.server.simulateTransaction(tx);
+    if ("error" in sim) throw mapContractError(`Simulation failed: ${sim.error}`, invoiceId);
+    const raw = scValToNative((sim as any).result.retval) as any;
+    if (!raw) return null;
+    return {
+      creator: raw.creator,
+      recipients: raw.recipients,
+      amounts: (raw.amounts as any[]).map((v: any) => BigInt(v)),
+      tokens: raw.tokens,
+      recurrenceInterval: Number(raw.recurrence_interval ?? raw.recurrenceInterval ?? 0),
+      maxRecurrences: Number(raw.max_recurrences ?? raw.maxRecurrences ?? 0),
+      numCreated: Number(raw.num_created ?? raw.numCreated ?? 0),
+    };
   }
 
   /** Pays toward multiple invoices in a single transaction. All invoices must use the same token.
