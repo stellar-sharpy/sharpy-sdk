@@ -16,6 +16,8 @@ export interface SharpyClientConfig {
   networkPassphrase: string;
   contractId: string;
   signTransaction?: (xdr: string, networkPassphrase: string) => Promise<string>;
+  pollIntervalMs?: number;
+  pollMaxAttempts?: number;
 }
 
 export interface RecipientAmount {
@@ -155,10 +157,12 @@ export class SharpyClient {
 
     if (sendResult.status === "ERROR") throw new Error(`Submit failed: ${JSON.stringify(sendResult.errorResult)}`);
 
-    // Poll for confirmation
+    // Poll for confirmation (configurable interval/attempts)
+    const pollIntervalMs = this.config.pollIntervalMs ?? 1500;
+    const pollMaxAttempts = this.config.pollMaxAttempts ?? 20;
     let getResult;
-    for (let i = 0; i < 20; i++) {
-      await new Promise((r) => setTimeout(r, 1500));
+    for (let i = 0; i < pollMaxAttempts; i++) {
+      await new Promise((r) => setTimeout(r, pollIntervalMs));
       getResult = await this.server.getTransaction(sendResult.hash);
       if (getResult.status !== "NOT_FOUND") break;
     }
@@ -261,6 +265,43 @@ export class SharpyClient {
   async refund(caller: string, invoiceId: number): Promise<{ txHash: string }> {
     const args = [nativeToScVal(invoiceId, { type: "u64" })];
     const { txHash } = await this.buildAndSubmit(caller, "refund", args, invoiceId);
+    return { txHash };
+  }
+
+  /**
+   * Release an invoice directly (non-escrow immediate release).
+   * @param caller Caller address (must sign)
+   * @param invoiceId Invoice ID to release
+   */
+  async release(caller: string, invoiceId: number): Promise<{ txHash: string }> {
+    const args = [nativeToScVal(invoiceId, { type: "u64" })];
+    const { txHash } = await this.buildAndSubmit(caller, "release", args, invoiceId);
+    return { txHash };
+  }
+
+  /**
+   * Dispute an escrow release — blocks automatic release until resolved.
+   * @param caller Creator/arbitrator address (must sign)
+   * @param invoiceId Escrow invoice ID to dispute
+   */
+  async disputeRelease(caller: string, invoiceId: number): Promise<{ txHash: string }> {
+    const args = [nativeToScVal(invoiceId, { type: "u64" })];
+    const { txHash } = await this.buildAndSubmit(caller, "dispute_release", args, invoiceId);
+    return { txHash };
+  }
+
+  /**
+   * Resolve a disputed escrow — either release to recipients or refund payers.
+   * @param caller Admin/arbitrator address (must sign)
+   * @param invoiceId Disputed invoice ID
+   * @param shouldRelease true to release funds, false to refund
+   */
+  async resolveDispute(caller: string, invoiceId: number, shouldRelease: boolean): Promise<{ txHash: string }> {
+    const args = [
+      nativeToScVal(invoiceId, { type: "u64" }),
+      xdr.ScVal.scvBool(shouldRelease),
+    ];
+    const { txHash } = await this.buildAndSubmit(caller, "resolve_dispute", args, invoiceId);
     return { txHash };
   }
 
