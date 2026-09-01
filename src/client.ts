@@ -326,9 +326,19 @@ export class SharpyClient {
   }
 
   /**
-   * Dispute an escrow release — blocks automatic release until resolved.
-   * @param caller Creator/arbitrator address (must sign)
-   * @param invoiceId Escrow invoice ID to dispute
+   * Dispute an escrow release — blocks automatic release until arbitrated.
+   *
+   * Only the invoice `creator` (or optional `arbitrator` if set in
+   * {@link InvoiceOptions}) may call this. The escrow must be in `Pending`
+   * hold and `timestamp < release_at`; otherwise the transaction panics.
+   *
+   * On success, `DisputeState.disputed` is set to `true` and an `audit`
+   * entry with action `"dispute"` is appended. Funds remain locked until
+   * {@link resolveDispute} is called.
+   *
+   * @param caller Creator/arbitrator address — must sign and be the invoice creator
+   * @param invoiceId Escrow invoice ID to dispute — must be fully funded and in escrow hold
+   * @returns Transaction hash
    */
   async disputeRelease(caller: string, invoiceId: number): Promise<{ txHash: string }> {
     const args = [nativeToScVal(invoiceId, { type: "u64" })];
@@ -338,9 +348,15 @@ export class SharpyClient {
 
   /**
    * Resolve a disputed escrow — either release to recipients or refund payers.
-   * @param caller Admin/arbitrator address (must sign)
-   * @param invoiceId Disputed invoice ID
-   * @param shouldRelease true to release funds, false to refund
+   *
+   * Only the contract `admin` (or arbitrator with auth) may call this.
+   * Requires that {@link disputeRelease} has already been called and
+   * `DisputeState.disputed == true`.
+   *
+   * @param caller Admin/arbitrator address — must sign
+   * @param invoiceId Disputed invoice ID — must be in disputed escrow state
+   * @param shouldRelease `true` to release funds to recipients, `false` to refund all payers
+   * @returns Transaction hash
    */
   async resolveDispute(caller: string, invoiceId: number, shouldRelease: boolean): Promise<{ txHash: string }> {
     const args = [
