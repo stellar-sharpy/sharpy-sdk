@@ -425,6 +425,24 @@ export class SharpyClient {
   }
 
   /**
+   * Returns the schema version of an invoice.
+   * Useful for forward-compatibility checks when multiple contract versions coexist.
+   * @param invoiceId Invoice ID
+   * @returns version number (currently 1)
+   */
+  async getInvoiceVersion(invoiceId: number): Promise<number> {
+    const account = await this.server.getAccount("GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF");
+    const contract = new Contract(this.config.contractId);
+    const tx = new TransactionBuilder(account, { fee: BASE_FEE, networkPassphrase: this.config.networkPassphrase })
+      .addOperation(contract.call("get_invoice_version", nativeToScVal(invoiceId, { type: "u64" })))
+      .setTimeout(30)
+      .build();
+    const sim = await this.server.simulateTransaction(tx);
+    if ("error" in sim) throw mapContractError(`Simulation failed: ${sim.error}`, invoiceId);
+    return Number(scValToNative((sim as any).result.retval));
+  }
+
+  /**
    * Preview exact per-recipient payout distribution for a given payment amount.
    * Pure read operation that simulates the split logic with dust-correct rounding.
    * Handles proportional splits, fixed amounts, percentage rules, and tiered rules.
