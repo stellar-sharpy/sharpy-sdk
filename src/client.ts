@@ -814,10 +814,17 @@ export class SharpyClient {
   /**
    * Fetch all invoice IDs created by a specific address using the on-chain creator index.
    * Enables efficient dashboard pagination without scanning all invoice IDs.
+   * The contract returns the full list; slicing is done client-side in the SDK.
+   *
    * @param creator - Creator address to query
-   * @returns Array of invoice IDs created by this address
+   * @param opts.offset - Offset into result set (default: 0)
+   * @param opts.limit - Max results to return (default: all — backwards compatible)
+   * @returns Array of invoice IDs created by this address (sliced if pagination opts provided)
    */
-  async getInvoicesByCreator(creator: string): Promise<number[]> {
+  async getInvoicesByCreator(
+    creator: string,
+    opts?: { offset?: number; limit?: number }
+  ): Promise<number[]> {
     const account = await this.server.getAccount(READ_ONLY_ACCOUNT);
     const contract = new Contract(this.config.contractId);
     const tx = new TransactionBuilder(account, { fee: BASE_FEE, networkPassphrase: this.config.networkPassphrase })
@@ -827,7 +834,13 @@ export class SharpyClient {
     const sim = await this.server.simulateTransaction(tx);
     if ("error" in sim) throw new Error(`Simulation failed: ${sim.error}`);
     const raw = scValToNative((sim as any).result.retval) as any[];
-    return raw.map(Number);
+    const ids = raw.map(Number);
+    if (opts?.offset !== undefined || opts?.limit !== undefined) {
+      const offset = opts.offset ?? 0;
+      const limit = opts.limit ?? ids.length;
+      return ids.slice(offset, offset + limit);
+    }
+    return ids;
   }
 
   /**
@@ -866,10 +879,17 @@ export class SharpyClient {
    * Fetch all invoice IDs that a given address has paid toward.
    * Indexed on every pay() call with deduplication — each invoice appears at most once.
    * Use this to build a payer's payment history or "Invoices Paid" tab.
+   * The contract returns the full list; slicing is done client-side in the SDK.
+   *
    * @param payer - Payer address to query
-   * @returns Array of invoice IDs paid by this address
+   * @param opts.offset - Offset into result set (default: 0)
+   * @param opts.limit - Max results to return (default: all — backwards compatible)
+   * @returns Array of invoice IDs paid by this address (sliced if pagination opts provided)
    */
-  async getInvoicesByPayer(payer: string): Promise<number[]> {
+  async getInvoicesByPayer(
+    payer: string,
+    opts?: { offset?: number; limit?: number }
+  ): Promise<number[]> {
     const account = await this.server.getAccount(READ_ONLY_ACCOUNT);
     const contract = new Contract(this.config.contractId);
     const tx = new TransactionBuilder(account, { fee: BASE_FEE, networkPassphrase: this.config.networkPassphrase })
@@ -879,7 +899,13 @@ export class SharpyClient {
     const sim = await this.server.simulateTransaction(tx);
     if ("error" in sim) throw new Error(`Simulation failed: ${sim.error}`);
     const raw = scValToNative((sim as any).result.retval) as any[];
-    return raw.map(Number);
+    const ids = raw.map(Number);
+    if (opts?.offset !== undefined || opts?.limit !== undefined) {
+      const offset = opts.offset ?? 0;
+      const limit = opts.limit ?? ids.length;
+      return ids.slice(offset, offset + limit);
+    }
+    return ids;
   }
 
   /**
