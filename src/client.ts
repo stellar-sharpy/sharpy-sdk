@@ -63,6 +63,11 @@ export interface SubscriptionParams {
   numCreated: number;
 }
 
+export interface InvoiceNotes {
+  text: string;
+  updatedAt: number;
+}
+
 export interface AuditEntry {
   action: string;
   actor: string;
@@ -379,6 +384,40 @@ export class SharpyClient {
       maxRecurrences: Number(raw.max_recurrences ?? raw.maxRecurrences ?? 0),
       numCreated: Number(raw.num_created ?? raw.numCreated ?? 0),
     };
+  }
+
+  /**
+   * Attach or replace free-text notes on an invoice. Only creator can call (handoff #113/#114).
+   * @param caller Creator address (must sign)
+   * @param invoiceId Target invoice
+   * @param text Free-form notes text
+   */
+  async setInvoiceNotes(caller: string, invoiceId: number, text: string): Promise<{ txHash: string }> {
+    const args = [
+      new Address(caller).toScVal(),
+      nativeToScVal(invoiceId, { type: "u64" }),
+      nativeToScVal(text, { type: "string" }),
+    ];
+    const { txHash } = await this.buildAndSubmit(caller, "set_invoice_notes", args, invoiceId);
+    return { txHash };
+  }
+
+  /**
+   * Returns notes attached to an invoice, or null if none set (handoff #113/#114).
+   * @param invoiceId Invoice ID
+   */
+  async getInvoiceNotes(invoiceId: number): Promise<InvoiceNotes | null> {
+    const account = await this.server.getAccount("GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF");
+    const contract = new Contract(this.config.contractId);
+    const tx = new TransactionBuilder(account, { fee: BASE_FEE, networkPassphrase: this.config.networkPassphrase })
+      .addOperation(contract.call("get_invoice_notes", nativeToScVal(invoiceId, { type: "u64" })))
+      .setTimeout(30)
+      .build();
+    const sim = await this.server.simulateTransaction(tx);
+    if ("error" in sim) throw mapContractError(`Simulation failed: ${sim.error}`, invoiceId);
+    const raw = scValToNative((sim as any).result.retval) as any;
+    if (!raw) return null;
+    return { text: String(raw.text ?? raw), updatedAt: Number(raw.updated_at ?? raw.updatedAt ?? 0) };
   }
 
   /** Pays toward multiple invoices in a single transaction. All invoices must use the same token.
