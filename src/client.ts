@@ -9,7 +9,7 @@ import {
   xdr,
 } from "@stellar/stellar-sdk";
 import { Server } from "@stellar/stellar-sdk/rpc";
-import { DeadlinePassedError, InvoiceNotFoundError, InvoiceNotPendingError, OverpaymentError } from "./errors.js";
+import { CallerNotCreatorError, DeadlinePassedError, InvoiceNotFoundError, InvoiceNotPendingError, OverpaymentError } from "./errors.js";
 
 /**
  * Placeholder account used for read-only contract simulations.
@@ -123,6 +123,7 @@ function mapContractError(message: string, invoiceId?: number): Error {
   if (m.includes("deadline")) return new DeadlinePassedError(id);
   if (m.includes("not pending")) return new InvoiceNotPendingError(id);
   if (m.includes("overpayment") || m.includes("exceeds") || m.includes("remaining balance")) return new OverpaymentError(id);
+  if (m.includes("only creator can cancel")) return new CallerNotCreatorError(id);
   return new Error(message);
 }
 
@@ -318,13 +319,23 @@ export class SharpyClient {
     return { txHash };
   }
 
-  /** Cancels an invoice and refunds all payments. Only the creator can cancel.
-   * @param caller Creator address
+  /**
+   * Cancels an invoice and refunds all payments.
+   *
+   * **Creator-only:** the contract asserts `invoice.creator == caller`
+   * and panics with `"only creator can cancel"` if violated. The SDK maps
+   * this to {@link CallerNotCreatorError} via {@link mapContractError}.
+   *
+   * Behavior:
+   * - If `funded == 0` the invoice becomes `Cancelled`.
+   * - If `funded > 0` all payers are refunded and status becomes `Refunded`.
+   * - Only `Pending` invoices can be cancelled.
+   *
+   * @param caller Creator address — must be the invoice's `creator`; must sign the transaction
    * @param invoiceId Invoice ID to cancel
-   */
-  /** Cancels an invoice and refunds all payments. Only the creator can cancel.
-   * @param caller Creator address
-   * @param invoiceId Invoice ID to cancel
+   * @throws {CallerNotCreatorError} When `caller` is not the invoice creator
+   * @throws {InvoiceNotPendingError} When invoice is not in `Pending` status
+   * @throws {InvoiceNotFoundError} When invoice does not exist
    */
   async cancelInvoice(caller: string, invoiceId: number): Promise<{ txHash: string }> {
     const args = [
