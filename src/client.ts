@@ -407,6 +407,28 @@ export class SharpyClient {
   }
 
   /**
+   * Freeze an invoice — blocks further pay() calls. Admin-only (handoff #111, #45).
+   * @param caller Admin address (must sign)
+   * @param invoiceId Invoice to freeze
+   */
+  async freezeInvoice(caller: string, invoiceId: number): Promise<{ txHash: string }> {
+    const args = [nativeToScVal(invoiceId, { type: "u64" })];
+    const { txHash } = await this.buildAndSubmit(caller, "freeze_invoice", args, invoiceId);
+    return { txHash };
+  }
+
+  /**
+   * Unfreeze a previously frozen invoice — re-enables payments. Admin-only.
+   * @param caller Admin address (must sign)
+   * @param invoiceId Invoice to unfreeze
+   */
+  async unfreezeInvoice(caller: string, invoiceId: number): Promise<{ txHash: string }> {
+    const args = [nativeToScVal(invoiceId, { type: "u64" })];
+    const { txHash } = await this.buildAndSubmit(caller, "unfreeze_invoice", args, invoiceId);
+    return { txHash };
+  }
+
+  /**
    * Extend the TTL of an invoice entry to prevent archival.
    * Protocol 26 CAP-78: anyone can call this to keep long-lived or recurring
    * invoices accessible without a full state restore operation.
