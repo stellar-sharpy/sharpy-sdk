@@ -84,6 +84,14 @@ export interface DisputeState {
   disputedAt: number;
 }
 
+export interface InvoiceStats {
+  funded: bigint;
+  total: bigint;
+  paymentCount: number;
+  uniquePayers: number;
+  completionBps: number;
+}
+
 export interface InvoiceNotes {
   text: string;
   updatedAt: number;
@@ -539,10 +547,12 @@ export class SharpyClient {
     return BigInt(scValToNative((sim as any).result.retval) ?? 0);
   }
 
-  /** Returns funding stats for an invoice: funded, total, payment_count, unique_payers, completion_bps.
+  /**
+   * Returns funding stats for an invoice: funded, total, payment_count, unique_payers, completion_bps.
    * @param invoiceId Invoice ID
+   * @returns {@link InvoiceStats} with completion in basis points (10000 = fully funded)
    */
-  async getInvoiceStats(invoiceId: number): Promise<{ funded: bigint; total: bigint; paymentCount: number; uniquePayers: number; completionBps: number }> {
+  async getInvoiceStats(invoiceId: number): Promise<InvoiceStats> {
     const account = await this.server.getAccount(READ_ONLY_ACCOUNT);
     const contract = new Contract(this.config.contractId);
     const tx = new TransactionBuilder(account, { fee: BASE_FEE, networkPassphrase: this.config.networkPassphrase })
