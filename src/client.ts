@@ -63,6 +63,12 @@ export interface SubscriptionParams {
   numCreated: number;
 }
 
+export interface DisputeState {
+  releaseAt: number;
+  disputed: boolean;
+  disputedAt: number;
+}
+
 export interface InvoiceNotes {
   text: string;
   updatedAt: number;
@@ -502,6 +508,29 @@ export class SharpyClient {
     const args = [nativeToScVal(invoiceId, { type: "u64" })];
     const { txHash } = await this.buildAndSubmit(caller, "unfreeze_invoice", args, invoiceId);
     return { txHash };
+  }
+
+  /**
+   * Returns escrow/dispute state for an escrow-enabled invoice (handoff #37).
+   * Returns null if escrow was never entered or already resolved.
+   * @param invoiceId Invoice ID
+   */
+  async getEscrowState(invoiceId: number): Promise<DisputeState | null> {
+    const account = await this.server.getAccount("GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF");
+    const contract = new Contract(this.config.contractId);
+    const tx = new TransactionBuilder(account, { fee: BASE_FEE, networkPassphrase: this.config.networkPassphrase })
+      .addOperation(contract.call("get_escrow_state", nativeToScVal(invoiceId, { type: "u64" })))
+      .setTimeout(30)
+      .build();
+    const sim = await this.server.simulateTransaction(tx);
+    if ("error" in sim) throw mapContractError(`Simulation failed: ${sim.error}`, invoiceId);
+    const raw = scValToNative((sim as any).result.retval) as any;
+    if (!raw) return null;
+    return {
+      releaseAt: Number(raw.release_at ?? raw.releaseAt ?? 0),
+      disputed: Boolean(raw.disputed ?? false),
+      disputedAt: Number(raw.disputed_at ?? raw.disputedAt ?? 0),
+    };
   }
 
   /**
