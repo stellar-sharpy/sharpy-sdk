@@ -443,6 +443,23 @@ export class SharpyClient {
   }
 
   /**
+   * Returns the treasury address configured during initialize.
+   * Admin query for dashboards and protocol analytics (handoff #109).
+   * @returns Treasury Stellar address (strkey)
+   */
+  async getTreasury(): Promise<string> {
+    const account = await this.server.getAccount("GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF");
+    const contract = new Contract(this.config.contractId);
+    const tx = new TransactionBuilder(account, { fee: BASE_FEE, networkPassphrase: this.config.networkPassphrase })
+      .addOperation(contract.call("get_treasury"))
+      .setTimeout(30)
+      .build();
+    const sim = await this.server.simulateTransaction(tx);
+    if ("error" in sim) throw new Error(`Simulation failed: ${sim.error}`);
+    return String(scValToNative((sim as any).result.retval));
+  }
+
+  /**
    * Preview exact per-recipient payout distribution for a given payment amount.
    * Pure read operation that simulates the split logic with dust-correct rounding.
    * Handles proportional splits, fixed amounts, percentage rules, and tiered rules.
