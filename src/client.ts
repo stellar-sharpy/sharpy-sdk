@@ -703,6 +703,39 @@ export class SharpyClient {
   }
 
   /**
+   * Paginated wrapper for getInvoicesByCreator. Fetches all IDs then slices client-side.
+   * For large creators, use limit/offset to page through results efficiently.
+   * @param creator Creator address
+   * @param opts.limit Max results to return (default: all)
+   * @param opts.offset Offset into result set (default: 0)
+   */
+  async getInvoicesByCreatorPaginated(
+    creator: string,
+    opts?: { limit?: number; offset?: number }
+  ): Promise<{ ids: number[]; total: number }> {
+    const all = await this.getInvoicesByCreator(creator);
+    const offset = opts?.offset ?? 0;
+    const limit = opts?.limit ?? all.length;
+    return { ids: all.slice(offset, offset + limit), total: all.length };
+  }
+
+  /**
+   * Paginated wrapper for getInvoicesByPayer. Fetches all IDs then slices client-side.
+   * @param payer Payer address
+   * @param opts.limit Max results to return (default: all)
+   * @param opts.offset Offset into result set (default: 0)
+   */
+  async getInvoicesByPayerPaginated(
+    payer: string,
+    opts?: { limit?: number; offset?: number }
+  ): Promise<{ ids: number[]; total: number }> {
+    const all = await this.getInvoicesByPayer(payer);
+    const offset = opts?.offset ?? 0;
+    const limit = opts?.limit ?? all.length;
+    return { ids: all.slice(offset, offset + limit), total: all.length };
+  }
+
+  /**
    * Query claimable balance for an account/token pair.
    * Returns the internal credited balance available for withdrawal via `claim()`.
    * @param account - Account address
