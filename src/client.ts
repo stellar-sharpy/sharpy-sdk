@@ -847,13 +847,38 @@ export class SharpyClient {
    * Withdraw credited balance after a failed recipient transfer during invoice release.
    * Fallback recovery mechanism: if a recipient's transfer fails during `_release`,
    * funds are credited to their internal balance and can be claimed with this method.
-   * @param account - Account address to claim from (must sign)
-   * @param token - Token contract address
+   * Permissionless — anyone can trigger the claim for any account/token pair; the
+   * contract transfers from vault to `account`.
+   *
+   * Supports both signatures for backwards compatibility:
+   * - `claim(account, token)` — `account` signs (self-claim)
+   * - `claim(caller, account, token)` — `caller` signs, funds go to `account` (permissionless relay)
+   *
+   * @param accountOrCaller - Account holder address, or caller when using 3-arg form
+   * @param tokenOrAccount - Token contract address (2-arg form) or account holder (3-arg form)
+   * @param tokenOpt - Token contract address (only for 3-arg form)
    * @returns Claimed amount and transaction hash
    */
-  async claim(account: string, token: string): Promise<{ amount: bigint; txHash: string }> {
+  async claim(accountOrCaller: string, tokenOrAccount: string, tokenOpt?: string): Promise<{ amount: bigint; txHash: string }>;
+  async claim(account: string, token: string): Promise<{ amount: bigint; txHash: string }>;
+  async claim(caller: string, account: string, token: string): Promise<{ amount: bigint; txHash: string }>;
+  async claim(a: string, b: string, c?: string): Promise<{ amount: bigint; txHash: string }> {
+    let caller: string;
+    let account: string;
+    let token: string;
+    if (c !== undefined) {
+      // 3-arg form: claim(caller, account, token)
+      caller = a;
+      account = b;
+      token = c;
+    } else {
+      // 2-arg form: claim(account, token) — caller is the holder
+      caller = a;
+      account = a;
+      token = b;
+    }
     const args = [new Address(account).toScVal(), new Address(token).toScVal()];
-    const { txHash, result } = await this.buildAndSubmit(account, "claim", args);
+    const { txHash, result } = await this.buildAndSubmit(caller, "claim", args);
     return { amount: BigInt(scValToNative(result)), txHash };
   }
 
