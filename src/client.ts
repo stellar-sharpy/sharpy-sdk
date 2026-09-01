@@ -280,9 +280,20 @@ export class SharpyClient {
     return { txHash };
   }
 
-  /** Refunds all payers after deadline has passed and invoice is not fully funded.
-   * @param caller Any address can trigger the refund
+  /**
+   * Refunds all payers after deadline has passed and invoice is not fully funded.
+   *
+   * Preconditions (enforced on-chain):
+   * - Invoice status is `Pending`
+   * - `ledger.timestamp > deadline` — deadline has passed
+   * - `funded < total` — not fully funded (if fully funded, funds are in escrow or already released)
+   *
+   * Permissionless — any address can trigger the refund; the caller only pays the transaction fee.
+   *
+   * @param caller Any address that will sign and pay the fee
    * @param invoiceId Invoice ID that has passed its deadline
+   * @returns Transaction hash of the `refund` invocation
+   * @throws {InvoiceNotFoundError} If invoice does not exist
    */
   async refund(caller: string, invoiceId: number): Promise<{ txHash: string }> {
     const args = [nativeToScVal(invoiceId, { type: "u64" })];
@@ -291,9 +302,22 @@ export class SharpyClient {
   }
 
   /**
-   * Release an invoice directly (non-escrow immediate release).
-   * @param caller Caller address (must sign)
-   * @param invoiceId Invoice ID to release
+   * Release an invoice directly — distributes funds to recipients.
+   *
+   * Preconditions (enforced on-chain):
+   * - Invoice status is `Pending`
+   * - `funded == total` — invoice is fully funded
+   * - Escrow is **not** enabled (for escrow invoices use {@link releaseEscrow})
+   * - Deadline has not been exceeded for the release path
+   *
+   * On `_release`, the contract iterates recipients, transfers `amount` per
+   * split rule, falls back to `credit_account` if a transfer fails, and emits
+   * `invoice_released`. Funds are held in the contract's vault prior to this call.
+   *
+   * @param caller Caller address (must sign; typically a payer or the creator)
+   * @param invoiceId Invoice ID to release — must be fully funded
+   * @returns Transaction hash
+   * @throws {InvoiceNotFoundError} If invoice does not exist
    */
   async release(caller: string, invoiceId: number): Promise<{ txHash: string }> {
     const args = [nativeToScVal(invoiceId, { type: "u64" })];
