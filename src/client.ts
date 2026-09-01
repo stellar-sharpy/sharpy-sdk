@@ -618,9 +618,17 @@ export class SharpyClient {
   }
 
   /**
-   * Returns escrow/dispute state for an escrow-enabled invoice (handoff #37).
-   * Returns null if escrow was never entered or already resolved.
-   * @param invoiceId Invoice ID
+   * Returns escrow/dispute state for an escrow-enabled invoice.
+   *
+   * Reads `DisputeState { release_at, disputed, disputed_at }` stored when a
+   * fully-funded escrow invoice enters hold. The state is created on
+   * `pay()` when `funded == total` and `escrowEnabled` is true, and is
+   * removed after {@link releaseEscrow} or {@link resolveDispute}.
+   *
+   * @param invoiceId Invoice ID to query
+   * @returns {@link DisputeState} if escrow is active, or `null` if no escrow
+   *   state exists (never entered or already resolved)
+   * @throws {InvoiceNotFoundError} If the invoice does not exist
    */
   async getEscrowState(invoiceId: number): Promise<DisputeState | null> {
     const account = await this.server.getAccount(READ_ONLY_ACCOUNT);
