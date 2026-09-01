@@ -534,6 +534,33 @@ export class SharpyClient {
   }
 
   /**
+   * Bump TTL for an entire recurring chain starting from a given invoice.
+   * Walks via getNextRecurring and calls bump_invoice_ttl for each invoice
+   * in the chain. Useful to prevent archival of long-lived subscription chains
+   * (Protocol 26 CAP-78).
+   * @param caller Address paying fees (anyone can call)
+   * @param startInvoiceId Head of the recurring chain
+   * @param maxHops Safety cap to avoid infinite walks (default 50)
+   * @returns Array of { invoiceId, txHash } for each bumped invoice
+   */
+  async bumpInvoiceTtlChain(
+    caller: string,
+    startInvoiceId: number,
+    maxHops: number = 50
+  ): Promise<{ invoiceId: number; txHash: string }[]> {
+    const results: { invoiceId: number; txHash: string }[] = [];
+    let current: number | null = startInvoiceId;
+    let hops = 0;
+    while (current !== null && hops < maxHops) {
+      const { txHash } = await this.bumpInvoiceTtl(caller, current);
+      results.push({ invoiceId: current, txHash });
+      current = await this.getNextRecurring(current);
+      hops++;
+    }
+    return results;
+  }
+
+  /**
    * Extend the TTL of an invoice entry to prevent archival.
    * Protocol 26 CAP-78: anyone can call this to keep long-lived or recurring
    * invoices accessible without a full state restore operation.
