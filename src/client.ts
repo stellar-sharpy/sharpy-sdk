@@ -11,6 +11,19 @@ import {
 import { Server } from "@stellar/stellar-sdk/rpc";
 import { DeadlinePassedError, InvoiceNotFoundError, InvoiceNotPendingError, OverpaymentError } from "./errors.js";
 
+/**
+ * Placeholder account used for read-only contract simulations.
+ *
+ * All `simulateTransaction` calls require a source account, even for pure reads
+ * that never submit. This is the Soroban "zero" address
+ * `GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF` — it is not funded
+ * and never signs. The RPC accepts it for simulation because no auth is required
+ * for `get_*` queries. If an RPC ever rejects it, callers can pass an explicit
+ * `sourceAccount` (see `getInvoice({ sourceAccount })` overload) or fund the
+ * placeholder on a local quickstart node.
+ */
+export const READ_ONLY_ACCOUNT = "GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF";
+
 export interface SharpyClientConfig {
   rpcUrl: string;
   networkPassphrase: string;
@@ -322,14 +335,22 @@ export class SharpyClient {
     return { txHash };
   }
 
-  /** Fetches full invoice state by ID.
+  /**
+   * Fetches full invoice state by ID.
+   *
+   * Uses {@link READ_ONLY_ACCOUNT} (`G…WHF`) as the simulation source account.
+   * This placeholder is unfunded and never signs — it exists only because
+   * `simulateTransaction` requires a source account even for pure reads that
+   * require no auth. The RPC accepts it for `get_*` queries. If your RPC
+   * rejects unknown accounts, pass a funded `sourceAccount` instead.
+   *
    * @param invoiceId Invoice ID to fetch
+   * @param opts.sourceAccount Optional funded account to use as simulation source (defaults to {@link READ_ONLY_ACCOUNT})
    * @throws InvoiceNotFoundError if the invoice does not exist
    */
-  async getInvoice(invoiceId: number): Promise<Invoice> {
-    const account = await this.server.getAccount(
-      "GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF" // read-only placeholder
-    );
+  async getInvoice(invoiceId: number, opts?: { sourceAccount?: string }): Promise<Invoice> {
+    const source = opts?.sourceAccount ?? READ_ONLY_ACCOUNT;
+    const account = await this.server.getAccount(source);
     const contract = new Contract(this.config.contractId);
     const tx = new TransactionBuilder(account, {
       fee: BASE_FEE,
@@ -372,7 +393,7 @@ export class SharpyClient {
    * @returns Array of audit entries with action, actor, and timestamp
    */
   async getAuditLog(invoiceId: number): Promise<AuditEntry[]> {
-    const account = await this.server.getAccount("GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF");
+    const account = await this.server.getAccount(READ_ONLY_ACCOUNT);
     const contract = new Contract(this.config.contractId);
     const tx = new TransactionBuilder(account, { fee: BASE_FEE, networkPassphrase: this.config.networkPassphrase })
       .addOperation(contract.call("get_audit_log", nativeToScVal(invoiceId, { type: "u64" })))
@@ -389,7 +410,7 @@ export class SharpyClient {
    */
   async getNextRecurring(invoiceId: number): Promise<number | null> {
     const account = await this.server.getAccount(
-      "GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF"
+      READ_ONLY_ACCOUNT
     );
     const contract = new Contract(this.config.contractId);
     const tx = new TransactionBuilder(account, {
@@ -412,7 +433,7 @@ export class SharpyClient {
    * @param invoiceId Recurring invoice ID
    */
   async getRecurringParams(invoiceId: number): Promise<SubscriptionParams | null> {
-    const account = await this.server.getAccount("GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF");
+    const account = await this.server.getAccount(READ_ONLY_ACCOUNT);
     const contract = new Contract(this.config.contractId);
     const tx = new TransactionBuilder(account, { fee: BASE_FEE, networkPassphrase: this.config.networkPassphrase })
       .addOperation(contract.call("get_recurring_params", nativeToScVal(invoiceId, { type: "u64" })))
@@ -454,7 +475,7 @@ export class SharpyClient {
    * @param invoiceId Invoice ID
    */
   async getInvoiceNotes(invoiceId: number): Promise<InvoiceNotes | null> {
-    const account = await this.server.getAccount("GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF");
+    const account = await this.server.getAccount(READ_ONLY_ACCOUNT);
     const contract = new Contract(this.config.contractId);
     const tx = new TransactionBuilder(account, { fee: BASE_FEE, networkPassphrase: this.config.networkPassphrase })
       .addOperation(contract.call("get_invoice_notes", nativeToScVal(invoiceId, { type: "u64" })))
@@ -492,7 +513,7 @@ export class SharpyClient {
    * @returns Total paid in stroops
    */
   async getPayerTotal(invoiceId: number, payer: string): Promise<bigint> {
-    const account = await this.server.getAccount("GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF");
+    const account = await this.server.getAccount(READ_ONLY_ACCOUNT);
     const contract = new Contract(this.config.contractId);
     const tx = new TransactionBuilder(account, { fee: BASE_FEE, networkPassphrase: this.config.networkPassphrase })
       .addOperation(contract.call(
@@ -511,7 +532,7 @@ export class SharpyClient {
    * @param invoiceId Invoice ID
    */
   async getInvoiceStats(invoiceId: number): Promise<{ funded: bigint; total: bigint; paymentCount: number; uniquePayers: number; completionBps: number }> {
-    const account = await this.server.getAccount("GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF");
+    const account = await this.server.getAccount(READ_ONLY_ACCOUNT);
     const contract = new Contract(this.config.contractId);
     const tx = new TransactionBuilder(account, { fee: BASE_FEE, networkPassphrase: this.config.networkPassphrase })
       .addOperation(contract.call("get_invoice_stats", nativeToScVal(invoiceId, { type: "u64" })))
@@ -557,7 +578,7 @@ export class SharpyClient {
    * @param invoiceId Invoice ID
    */
   async getEscrowState(invoiceId: number): Promise<DisputeState | null> {
-    const account = await this.server.getAccount("GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF");
+    const account = await this.server.getAccount(READ_ONLY_ACCOUNT);
     const contract = new Contract(this.config.contractId);
     const tx = new TransactionBuilder(account, { fee: BASE_FEE, networkPassphrase: this.config.networkPassphrase })
       .addOperation(contract.call("get_escrow_state", nativeToScVal(invoiceId, { type: "u64" })))
@@ -623,7 +644,7 @@ export class SharpyClient {
    * @returns 32-byte hex string (SHA-256 hash)
    */
   async getInvoiceFingerprint(invoiceId: number): Promise<string> {
-    const account = await this.server.getAccount("GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF");
+    const account = await this.server.getAccount(READ_ONLY_ACCOUNT);
     const contract = new Contract(this.config.contractId);
     const tx = new TransactionBuilder(account, { fee: BASE_FEE, networkPassphrase: this.config.networkPassphrase })
       .addOperation(contract.call("get_invoice_fingerprint", nativeToScVal(invoiceId, { type: "u64" })))
@@ -646,7 +667,7 @@ export class SharpyClient {
    * @returns version number (currently 1)
    */
   async getInvoiceVersion(invoiceId: number): Promise<number> {
-    const account = await this.server.getAccount("GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF");
+    const account = await this.server.getAccount(READ_ONLY_ACCOUNT);
     const contract = new Contract(this.config.contractId);
     const tx = new TransactionBuilder(account, { fee: BASE_FEE, networkPassphrase: this.config.networkPassphrase })
       .addOperation(contract.call("get_invoice_version", nativeToScVal(invoiceId, { type: "u64" })))
@@ -663,7 +684,7 @@ export class SharpyClient {
    * @returns Treasury Stellar address (strkey)
    */
   async getTreasury(): Promise<string> {
-    const account = await this.server.getAccount("GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF");
+    const account = await this.server.getAccount(READ_ONLY_ACCOUNT);
     const contract = new Contract(this.config.contractId);
     const tx = new TransactionBuilder(account, { fee: BASE_FEE, networkPassphrase: this.config.networkPassphrase })
       .addOperation(contract.call("get_treasury"))
@@ -683,7 +704,7 @@ export class SharpyClient {
    * @returns Array of bigint amounts per recipient (same order as invoice.recipients)
    */
   async previewPayout(invoiceId: number, amount: bigint): Promise<bigint[]> {
-    const account = await this.server.getAccount("GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF");
+    const account = await this.server.getAccount(READ_ONLY_ACCOUNT);
     const contract = new Contract(this.config.contractId);
     const tx = new TransactionBuilder(account, { fee: BASE_FEE, networkPassphrase: this.config.networkPassphrase })
       .addOperation(contract.call(
@@ -706,7 +727,7 @@ export class SharpyClient {
    * @returns Array of invoice IDs created by this address
    */
   async getInvoicesByCreator(creator: string): Promise<number[]> {
-    const account = await this.server.getAccount("GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF");
+    const account = await this.server.getAccount(READ_ONLY_ACCOUNT);
     const contract = new Contract(this.config.contractId);
     const tx = new TransactionBuilder(account, { fee: BASE_FEE, networkPassphrase: this.config.networkPassphrase })
       .addOperation(contract.call("get_invoices_by_creator", new Address(creator).toScVal()))
@@ -739,7 +760,7 @@ export class SharpyClient {
    * @returns Total invoice count
    */
   async getInvoiceCount(): Promise<number> {
-    const account = await this.server.getAccount("GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF");
+    const account = await this.server.getAccount(READ_ONLY_ACCOUNT);
     const contract = new Contract(this.config.contractId);
     const tx = new TransactionBuilder(account, { fee: BASE_FEE, networkPassphrase: this.config.networkPassphrase })
       .addOperation(contract.call("get_invoice_count"))
@@ -758,7 +779,7 @@ export class SharpyClient {
    * @returns Array of invoice IDs paid by this address
    */
   async getInvoicesByPayer(payer: string): Promise<number[]> {
-    const account = await this.server.getAccount("GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF");
+    const account = await this.server.getAccount(READ_ONLY_ACCOUNT);
     const contract = new Contract(this.config.contractId);
     const tx = new TransactionBuilder(account, { fee: BASE_FEE, networkPassphrase: this.config.networkPassphrase })
       .addOperation(contract.call("get_invoices_by_payer", new Address(payer).toScVal()))
@@ -811,7 +832,7 @@ export class SharpyClient {
    * @returns Claimable balance in stroops
    */
   async getClaimableBalance(account: string, token: string): Promise<bigint> {
-    const acc = await this.server.getAccount("GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF");
+    const acc = await this.server.getAccount(READ_ONLY_ACCOUNT);
     const contract = new Contract(this.config.contractId);
     const tx = new TransactionBuilder(acc, { fee: BASE_FEE, networkPassphrase: this.config.networkPassphrase })
       .addOperation(contract.call(
