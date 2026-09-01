@@ -692,6 +692,28 @@ export class SharpyClient {
   }
 
   /**
+   * Convenience helper matching the issue spec: follows the recurring chain via
+   * `getNextRecurring` and bumps TTL for each invoice. Stops when
+   * `getNextRecurring` returns null and returns the count of invoices bumped.
+   *
+   * This is a thin wrapper around {@link bumpInvoiceTtlChain} that returns a
+   * simple count, matching the `bumpRecurringChain(startInvoiceId, caller)` spec.
+   *
+   * @param startInvoiceId Head of the recurring chain
+   * @param caller Address paying fees (anyone can call)
+   * @param maxHops Safety cap to avoid infinite walks (default 50)
+   * @returns Number of invoices whose TTL was bumped
+   */
+  async bumpRecurringChain(
+    startInvoiceId: number,
+    caller: string,
+    maxHops: number = 50
+  ): Promise<number> {
+    const results = await this.bumpInvoiceTtlChain(caller, startInvoiceId, maxHops);
+    return results.length;
+  }
+
+  /**
    * Extend the TTL of an invoice entry to prevent archival.
    * Protocol 26 CAP-78: anyone can call this to keep long-lived or recurring
    * invoices accessible without a full state restore operation.
