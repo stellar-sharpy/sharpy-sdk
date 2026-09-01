@@ -8,6 +8,9 @@ export type {
   SplitRule,
   Invoice,
   AuditEntry,
+  SubscriptionParams,
+  InvoiceNotes,
+  DisputeState,
 } from "./client.js";
 export { InvoiceNotFoundError, DeadlinePassedError, InvoiceNotPendingError, OverpaymentError } from "./errors.js";
 export { connectWallet, getWalletPublicKey, signTransaction } from "./wallet.js";
