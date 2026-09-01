@@ -203,6 +203,26 @@ export class SharpyClient {
     return { txHash };
   }
 
+  /**
+   * Pay toward an invoice with an optional tip to treasury.
+   * Wraps pay_with_tip (handoff #110, #51). Tip is transferred directly to treasury
+   * and does NOT count toward funded/total. Set tip=0 to behave like pay().
+   * @param payer Payer address (must sign)
+   * @param invoiceId Target invoice ID
+   * @param amount Amount in stroops
+   * @param tip Gratuity in stroops (non-negative, default 0)
+   */
+  async payWithTip(payer: string, invoiceId: number, amount: bigint, tip: bigint = 0n): Promise<{ txHash: string }> {
+    const args = [
+      new Address(payer).toScVal(),
+      nativeToScVal(invoiceId, { type: "u64" }),
+      nativeToScVal(amount, { type: "i128" }),
+      nativeToScVal(tip, { type: "i128" }),
+    ];
+    const { txHash } = await this.buildAndSubmit(payer, "pay_with_tip", args, invoiceId);
+    return { txHash };
+  }
+
   /** Releases escrow-held funds once the delay period has passed.
    * @param caller Caller address
    * @param invoiceId Invoice ID with escrow enabled
