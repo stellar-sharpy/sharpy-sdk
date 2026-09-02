@@ -1,6 +1,7 @@
 # Changelog
 
 ## [Unreleased]
+- feat(sdk): archival — archive/isArchived/unarchive
 - feat(sdk): approval — set/approve/getApproval
 - feat(sdk): template — create/getTemplate
 - feat(sdk): recurring pause — pause/resume
@@ -51,6 +52,7 @@
 - ESM + CJS + TypeScript declaration output via tsup
 
 ## [Unreleased]
+- feat(sdk): archival — archive/isArchived/unarchive
 - feat(sdk): approval — set/approve/getApproval
 - feat(sdk): template — create/getTemplate
 - feat(sdk): recurring pause — pause/resume

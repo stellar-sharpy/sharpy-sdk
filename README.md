@@ -350,3 +350,5 @@ See [SECURITY.md](SECURITY.md) for the vulnerability disclosure process.
 - `feat/sdk-template` — feat(sdk): template — create/getTemplate
 
 - `feat/sdk-approval` — feat(sdk): approval — set/approve/getApproval
+
+- `feat/sdk-archival` — feat(sdk): archival — archive/isArchived/unarchive
