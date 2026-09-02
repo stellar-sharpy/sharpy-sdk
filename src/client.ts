@@ -1207,6 +1207,23 @@ async extendDeadline(caller: string, invoiceId: number, newDeadline: number): Pr
     const {txHash}=await this.buildAndSubmit(caller,"extend_deadline",args,invoiceId);
     return {txHash};
   }
+
+async getInvoiceMetadata(invoiceId: number): Promise<InvoiceMetadata | null> {
+    const account = await this.server.getAccount(READ_ONLY_ACCOUNT);
+    const contract = new Contract(this.config.contractId);
+    const tx = new TransactionBuilder(account, { fee: BASE_FEE, networkPassphrase: this.config.networkPassphrase }).addOperation(contract.call("get_invoice_metadata", nativeToScVal(invoiceId,{type:"u64"}))).setTimeout(30).build();
+    const sim = await this.server.simulateTransaction(tx);
+    if ("error" in sim) throw mapContractError(`Simulation failed: ${sim.error}`, invoiceId);
+    const raw = scValToNative((sim as any).result.retval) as any;
+    if (!raw) return null;
+    return { entries: (raw.entries as any[]).map(String), updatedAt: Number(raw.updated_at ?? 0) };
+  }
+  async setInvoiceMetadata(caller: string, invoiceId: number, entries: string[]): Promise<{txHash:string}> {
+    const entriesArg = xdr.ScVal.scvVec(entries.map(e=> nativeToScVal(e,{type:"string"})));
+    const args=[new Address(caller).toScVal(), nativeToScVal(invoiceId,{type:"u64"}), entriesArg];
+    const {txHash}=await this.buildAndSubmit(caller,"set_invoice_metadata",args,invoiceId);
+    return {txHash};
+  }
 }
 
 function buildInvoiceOptions(params: CreateInvoiceParams): xdr.ScVal {
