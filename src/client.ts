@@ -92,6 +92,11 @@ export interface InvoiceStats {
   completionBps: number;
 }
 
+
+export interface InvoiceTags {
+  tags: string[];
+  updatedAt: number;
+}
 export interface InvoiceNotes {
   text: string;
   updatedAt: number;
