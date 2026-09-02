@@ -94,6 +94,7 @@ export interface InvoiceStats {
 
 
 export interface InvoiceExtraMemo { memo: string; updatedAt: number; }
+export interface InvoiceMetadata { entries: string[]; updatedAt: number; }
 export interface InvoiceTags {
   tags: string[];
   updatedAt: number;
