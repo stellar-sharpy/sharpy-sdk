@@ -1261,6 +1261,22 @@ async pauseRecurring(caller: string, invoiceId: number): Promise<{txHash:string}
     if ("error" in sim) throw new Error(`Simulation failed: ${sim.error}`);
     return Boolean(scValToNative((sim as any).result.retval));
   }
+
+async createTemplate(caller: string, name: string, recipients: string[], amounts: bigint[]): Promise<{templateId:number; txHash:string}> {
+    const args=[new Address(caller).toScVal(), nativeToScVal(name,{type:"string"}), nativeToScVal(recipients.map(r=> new Address(r).toScVal())), nativeToScVal(amounts,{type:"i128"})];
+    const {txHash, result}=await this.buildAndSubmit(caller,"create_template",args);
+    return {templateId: Number(scValToNative(result)), txHash};
+  }
+  async getTemplate(templateId: number): Promise<InvoiceTemplate | null> {
+    const account=await this.server.getAccount(READ_ONLY_ACCOUNT);
+    const contract=new Contract(this.config.contractId);
+    const tx=new TransactionBuilder(account,{fee:BASE_FEE, networkPassphrase:this.config.networkPassphrase}).addOperation(contract.call("get_template", nativeToScVal(templateId,{type:"u64"}))).setTimeout(30).build();
+    const sim=await this.server.simulateTransaction(tx);
+    if ("error" in sim) throw new Error(`Simulation failed: ${sim.error}`);
+    const raw=scValToNative((sim as any).result.retval) as any;
+    if (!raw) return null;
+    return { templateId: Number(raw.template_id ?? 0), name: String(raw.name), recipients: (raw.recipients as any[]).map(String), amounts: (raw.amounts as any[]).map((v:any)=> BigInt(v)) };
+  }
 }
 
 function buildInvoiceOptions(params: CreateInvoiceParams): xdr.ScVal {
