@@ -1149,6 +1149,34 @@ export class SharpyClient {
 
     return { txHash: sendResult.hash };
   }
+
+/**
+   * Get tags for an invoice.
+   * @param invoiceId Invoice ID
+   */
+  async getInvoiceTags(invoiceId: number): Promise<InvoiceTags | null> {
+    const account = await this.server.getAccount(READ_ONLY_ACCOUNT);
+    const contract = new Contract(this.config.contractId);
+    const tx = new TransactionBuilder(account, { fee: BASE_FEE, networkPassphrase: this.config.networkPassphrase })
+      .addOperation(contract.call("get_invoice_tags", nativeToScVal(invoiceId, { type: "u64" })))
+      .setTimeout(30)
+      .build();
+    const sim = await this.server.simulateTransaction(tx);
+    if ("error" in sim) throw mapContractError(`Simulation failed: ${sim.error}`, invoiceId);
+    const raw = scValToNative((sim as any).result.retval) as any;
+    if (!raw) return null;
+    return { tags: (raw.tags as any[]).map(String), updatedAt: Number(raw.updated_at ?? raw.updatedAt ?? 0) };
+  }
+
+  /**
+   * Set tags for an invoice — creator only.
+   */
+  async setInvoiceTags(caller: string, invoiceId: number, tags: string[]): Promise<{ txHash: string }> {
+    const tagsArg = xdr.ScVal.scvVec(tags.map(t => nativeToScVal(t, { type: "string" })));
+    const args = [new Address(caller).toScVal(), nativeToScVal(invoiceId, { type: "u64" }), tagsArg];
+    const { txHash } = await this.buildAndSubmit(caller, "set_invoice_tags", args, invoiceId);
+    return { txHash };
+  }
 }
 
 function buildInvoiceOptions(params: CreateInvoiceParams): xdr.ScVal {
