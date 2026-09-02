@@ -1,6 +1,7 @@
 # Changelog
 
 ## [Unreleased]
+- feat(sdk): extend deadline — extendDeadline
 - feat(sdk): batch refund — refundBatch
 - feat(sdk): memo ext — get/setInvoiceMemoExt
 
@@ -45,6 +46,7 @@
 - ESM + CJS + TypeScript declaration output via tsup
 
 ## [Unreleased]
+- feat(sdk): extend deadline — extendDeadline
 - feat(sdk): batch refund — refundBatch
 - feat(sdk): memo ext — get/setInvoiceMemoExt - Invoice Tags
 - feat(sdk): add InvoiceTags and get/setInvoiceTags
