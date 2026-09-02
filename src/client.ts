@@ -1200,6 +1200,12 @@ async refundBatch(caller: string, invoiceIds: number[]): Promise<{count:number; 
     const {txHash, result}=await this.buildAndSubmit(caller,"refund_batch",[new Address(caller).toScVal(), idsArg]);
     return {count: Number(scValToNative(result)), txHash};
   }
+
+async extendDeadline(caller: string, invoiceId: number, newDeadline: number): Promise<{txHash:string}> {
+    const args=[new Address(caller).toScVal(), nativeToScVal(invoiceId,{type:"u64"}), nativeToScVal(newDeadline,{type:"u64"})];
+    const {txHash}=await this.buildAndSubmit(caller,"extend_deadline",args,invoiceId);
+    return {txHash};
+  }
 }
 
 function buildInvoiceOptions(params: CreateInvoiceParams): xdr.ScVal {
