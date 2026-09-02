@@ -346,3 +346,5 @@ See [SECURITY.md](SECURITY.md) for the vulnerability disclosure process.
 - `feat/sdk-discount` — feat(sdk): discount — get/setDiscount
 
 - `feat/sdk-recurring-pause` — feat(sdk): recurring pause — pause/resume
+
+- `feat/sdk-template` — feat(sdk): template — create/getTemplate
