@@ -336,3 +336,5 @@ See [SECURITY.md](SECURITY.md) for the vulnerability disclosure process.
 - `setInvoiceTags(caller, invoiceId, tags)` — set tags
 
 - `sdk-memo-ext` — feat(sdk): memo ext — get/setInvoiceMemoExt
+
+- `sdk-batch-refund` — feat(sdk): batch refund — refundBatch
