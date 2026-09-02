@@ -11,6 +11,7 @@ export type {
   SubscriptionParams,
   InvoiceNotes,
   InvoiceTags,
+  InvoiceExtraMemo,
   DisputeState,
   InvoiceStats,
 } from "./client.js";
