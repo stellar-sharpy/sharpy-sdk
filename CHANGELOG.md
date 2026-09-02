@@ -1,6 +1,7 @@
 # Changelog
 
 ## [Unreleased]
+- feat(sdk): template — create/getTemplate
 - feat(sdk): recurring pause — pause/resume
 - feat(sdk): discount — get/setDiscount
 - feat(sdk): metadata — get/setInvoiceMetadata
@@ -49,6 +50,7 @@
 - ESM + CJS + TypeScript declaration output via tsup
 
 ## [Unreleased]
+- feat(sdk): template — create/getTemplate
 - feat(sdk): recurring pause — pause/resume
 - feat(sdk): discount — get/setDiscount
 - feat(sdk): metadata — get/setInvoiceMetadata
