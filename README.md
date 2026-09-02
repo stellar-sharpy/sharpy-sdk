@@ -340,3 +340,5 @@ See [SECURITY.md](SECURITY.md) for the vulnerability disclosure process.
 - `sdk-batch-refund` — feat(sdk): batch refund — refundBatch
 
 - `sdk-extend-deadline` — feat(sdk): extend deadline — extendDeadline
+
+- `feat/sdk-metadata` — feat(sdk): metadata — get/setInvoiceMetadata
