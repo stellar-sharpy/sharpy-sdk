@@ -41,3 +41,6 @@
 - Utilities: `parseAmount`, `formatAmount`, `deadlineFromDays`, `isExpired`, `isValidAddress`, `truncateAddress`, `explorerUrl`
 - `NETWORKS` constant with testnet and mainnet config
 - ESM + CJS + TypeScript declaration output via tsup
+
+## [Unreleased] - Invoice Tags
+- feat(sdk): add InvoiceTags and get/setInvoiceTags
