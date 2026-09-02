@@ -338,3 +338,5 @@ See [SECURITY.md](SECURITY.md) for the vulnerability disclosure process.
 - `sdk-memo-ext` — feat(sdk): memo ext — get/setInvoiceMemoExt
 
 - `sdk-batch-refund` — feat(sdk): batch refund — refundBatch
+
+- `sdk-extend-deadline` — feat(sdk): extend deadline — extendDeadline
