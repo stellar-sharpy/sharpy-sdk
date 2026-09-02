@@ -348,3 +348,5 @@ See [SECURITY.md](SECURITY.md) for the vulnerability disclosure process.
 - `feat/sdk-recurring-pause` — feat(sdk): recurring pause — pause/resume
 
 - `feat/sdk-template` — feat(sdk): template — create/getTemplate
+
+- `feat/sdk-approval` — feat(sdk): approval — set/approve/getApproval

@@ -97,6 +97,7 @@ export interface InvoiceExtraMemo { memo: string; updatedAt: number; }
 export interface InvoiceMetadata { entries: string[]; updatedAt: number; }
 export interface DiscountConfig { discountBps: number; updatedAt: number; }
 export interface InvoiceTemplate { templateId: number; name: string; recipients: string[]; amounts: bigint[]; }
+export interface ApprovalState { approvers: string[]; required: number; }
 export interface InvoiceTags {
   tags: string[];
   updatedAt: number;
@@ -1276,6 +1277,27 @@ async createTemplate(caller: string, name: string, recipients: string[], amounts
     const raw=scValToNative((sim as any).result.retval) as any;
     if (!raw) return null;
     return { templateId: Number(raw.template_id ?? 0), name: String(raw.name), recipients: (raw.recipients as any[]).map(String), amounts: (raw.amounts as any[]).map((v:any)=> BigInt(v)) };
+  }
+
+async setApprovalConfig(caller: string, invoiceId: number, approvers: string[], required: number): Promise<{txHash:string}> {
+    const args=[new Address(caller).toScVal(), nativeToScVal(invoiceId,{type:"u64"}), nativeToScVal(approvers.map(a=> new Address(a).toScVal())), nativeToScVal(required,{type:"u32"})];
+    const {txHash}=await this.buildAndSubmit(caller,"set_approval_config",args,invoiceId);
+    return {txHash};
+  }
+  async approveInvoice(approver: string, invoiceId: number): Promise<{txHash:string}> {
+    const args=[new Address(approver).toScVal(), nativeToScVal(invoiceId,{type:"u64"})];
+    const {txHash}=await this.buildAndSubmit(approver,"approve_invoice",args,invoiceId);
+    return {txHash};
+  }
+  async getApprovalState(invoiceId: number): Promise<ApprovalState | null> {
+    const account=await this.server.getAccount(READ_ONLY_ACCOUNT);
+    const contract=new Contract(this.config.contractId);
+    const tx=new TransactionBuilder(account,{fee:BASE_FEE, networkPassphrase:this.config.networkPassphrase}).addOperation(contract.call("get_approval_state", nativeToScVal(invoiceId,{type:"u64"}))).setTimeout(30).build();
+    const sim=await this.server.simulateTransaction(tx);
+    if ("error" in sim) throw new Error(`Simulation failed: ${sim.error}`);
+    const raw=scValToNative((sim as any).result.retval) as any;
+    if (!raw) return null;
+    return { approvers: (raw.approvers as any[]).map(String), required: Number(raw.required ?? 0) };
   }
 }
 

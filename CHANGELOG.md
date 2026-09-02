@@ -1,6 +1,7 @@
 # Changelog
 
 ## [Unreleased]
+- feat(sdk): approval — set/approve/getApproval
 - feat(sdk): template — create/getTemplate
 - feat(sdk): recurring pause — pause/resume
 - feat(sdk): discount — get/setDiscount
@@ -50,6 +51,7 @@
 - ESM + CJS + TypeScript declaration output via tsup
 
 ## [Unreleased]
+- feat(sdk): approval — set/approve/getApproval
 - feat(sdk): template — create/getTemplate
 - feat(sdk): recurring pause — pause/resume
 - feat(sdk): discount — get/setDiscount

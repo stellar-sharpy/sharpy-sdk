@@ -11,6 +11,7 @@ export type {
   SubscriptionParams,
   InvoiceNotes,
   InvoiceTags,
+  ApprovalState,
   InvoiceTemplate,
   DiscountConfig,
   InvoiceMetadata,
