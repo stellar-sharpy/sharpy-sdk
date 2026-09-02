@@ -1,6 +1,7 @@
 # Changelog
 
 ## [Unreleased]
+- feat(sdk): recurring pause — pause/resume
 - feat(sdk): discount — get/setDiscount
 - feat(sdk): metadata — get/setInvoiceMetadata
 - feat(sdk): extend deadline — extendDeadline
@@ -48,6 +49,7 @@
 - ESM + CJS + TypeScript declaration output via tsup
 
 ## [Unreleased]
+- feat(sdk): recurring pause — pause/resume
 - feat(sdk): discount — get/setDiscount
 - feat(sdk): metadata — get/setInvoiceMetadata
 - feat(sdk): extend deadline — extendDeadline

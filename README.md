@@ -344,3 +344,5 @@ See [SECURITY.md](SECURITY.md) for the vulnerability disclosure process.
 - `feat/sdk-metadata` — feat(sdk): metadata — get/setInvoiceMetadata
 
 - `feat/sdk-discount` — feat(sdk): discount — get/setDiscount
+
+- `feat/sdk-recurring-pause` — feat(sdk): recurring pause — pause/resume
