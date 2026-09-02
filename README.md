@@ -329,3 +329,8 @@ See [SECURITY.md](SECURITY.md) for the vulnerability disclosure process.
 ## License
 
 [MIT](LICENSE)
+
+## Invoice Tags SDK
+
+- `getInvoiceTags(invoiceId)` — fetch tags
+- `setInvoiceTags(caller, invoiceId, tags)` — set tags

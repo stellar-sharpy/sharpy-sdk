@@ -10,6 +10,7 @@ export type {
   AuditEntry,
   SubscriptionParams,
   InvoiceNotes,
+  InvoiceTags,
   DisputeState,
   InvoiceStats,
 } from "./client.js";

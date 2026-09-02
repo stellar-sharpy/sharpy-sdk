@@ -35,3 +35,5 @@ export function explorerUrl(network: "testnet" | "mainnet", contractId: string, 
   const net = network === "testnet" ? "testnet" : "public";
   return `https://stellar.expert/explorer/${net}/${type}/${contractId}`;
 }
+
+export function formatTags(tags: string[]): string { return tags.join(', '); }
