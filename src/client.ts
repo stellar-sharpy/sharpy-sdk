@@ -1299,6 +1299,25 @@ async setApprovalConfig(caller: string, invoiceId: number, approvers: string[], 
     if (!raw) return null;
     return { approvers: (raw.approvers as any[]).map(String), required: Number(raw.required ?? 0) };
   }
+
+async archiveInvoice(caller: string, invoiceId: number): Promise<{txHash:string}> {
+    const args=[new Address(caller).toScVal(), nativeToScVal(invoiceId,{type:"u64"})];
+    const {txHash}=await this.buildAndSubmit(caller,"archive_invoice",args,invoiceId);
+    return {txHash};
+  }
+  async unarchiveInvoice(caller: string, invoiceId: number): Promise<{txHash:string}> {
+    const args=[new Address(caller).toScVal(), nativeToScVal(invoiceId,{type:"u64"})];
+    const {txHash}=await this.buildAndSubmit(caller,"unarchive_invoice",args,invoiceId);
+    return {txHash};
+  }
+  async isArchived(invoiceId: number): Promise<boolean> {
+    const account=await this.server.getAccount(READ_ONLY_ACCOUNT);
+    const contract=new Contract(this.config.contractId);
+    const tx=new TransactionBuilder(account,{fee:BASE_FEE, networkPassphrase:this.config.networkPassphrase}).addOperation(contract.call("is_archived", nativeToScVal(invoiceId,{type:"u64"}))).setTimeout(30).build();
+    const sim=await this.server.simulateTransaction(tx);
+    if ("error" in sim) throw new Error(`Simulation failed: ${sim.error}`);
+    return Boolean(scValToNative((sim as any).result.retval));
+  }
 }
 
 function buildInvoiceOptions(params: CreateInvoiceParams): xdr.ScVal {
