@@ -11,6 +11,7 @@ export type {
   SubscriptionParams,
   InvoiceNotes,
   InvoiceTags,
+  InvoiceMetadata,
   InvoiceExtraMemo,
   DisputeState,
   InvoiceStats,
