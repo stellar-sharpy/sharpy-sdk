@@ -342,3 +342,5 @@ See [SECURITY.md](SECURITY.md) for the vulnerability disclosure process.
 - `sdk-extend-deadline` — feat(sdk): extend deadline — extendDeadline
 
 - `feat/sdk-metadata` — feat(sdk): metadata — get/setInvoiceMetadata
+
+- `feat/sdk-discount` — feat(sdk): discount — get/setDiscount

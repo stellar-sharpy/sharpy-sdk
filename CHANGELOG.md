@@ -1,6 +1,7 @@
 # Changelog
 
 ## [Unreleased]
+- feat(sdk): discount — get/setDiscount
 - feat(sdk): metadata — get/setInvoiceMetadata
 - feat(sdk): extend deadline — extendDeadline
 - feat(sdk): batch refund — refundBatch
@@ -47,6 +48,7 @@
 - ESM + CJS + TypeScript declaration output via tsup
 
 ## [Unreleased]
+- feat(sdk): discount — get/setDiscount
 - feat(sdk): metadata — get/setInvoiceMetadata
 - feat(sdk): extend deadline — extendDeadline
 - feat(sdk): batch refund — refundBatch
