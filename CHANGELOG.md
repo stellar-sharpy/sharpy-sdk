@@ -1,6 +1,7 @@
 # Changelog
 
 ## [Unreleased]
+- feat(sdk): memo ext — get/setInvoiceMemoExt
 
 ### Added
 - `previewPayout(invoiceId, amount)` — preview exact per-recipient payouts with dust-correct rounding (Protocol 25/26 CAP-82)
@@ -42,5 +43,6 @@
 - `NETWORKS` constant with testnet and mainnet config
 - ESM + CJS + TypeScript declaration output via tsup
 
-## [Unreleased] - Invoice Tags
+## [Unreleased]
+- feat(sdk): memo ext — get/setInvoiceMemoExt - Invoice Tags
 - feat(sdk): add InvoiceTags and get/setInvoiceTags

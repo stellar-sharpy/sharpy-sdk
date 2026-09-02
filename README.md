@@ -334,3 +334,5 @@ See [SECURITY.md](SECURITY.md) for the vulnerability disclosure process.
 
 - `getInvoiceTags(invoiceId)` — fetch tags
 - `setInvoiceTags(caller, invoiceId, tags)` — set tags
+
+- `sdk-memo-ext` — feat(sdk): memo ext — get/setInvoiceMemoExt

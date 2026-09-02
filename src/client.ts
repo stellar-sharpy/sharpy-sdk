@@ -93,6 +93,7 @@ export interface InvoiceStats {
 }
 
 
+export interface InvoiceExtraMemo { memo: string; updatedAt: number; }
 export interface InvoiceTags {
   tags: string[];
   updatedAt: number;
@@ -1176,6 +1177,22 @@ export class SharpyClient {
     const args = [new Address(caller).toScVal(), nativeToScVal(invoiceId, { type: "u64" }), tagsArg];
     const { txHash } = await this.buildAndSubmit(caller, "set_invoice_tags", args, invoiceId);
     return { txHash };
+  }
+
+async getInvoiceMemoExt(invoiceId: number): Promise<InvoiceExtraMemo | null> {
+    const account = await this.server.getAccount(READ_ONLY_ACCOUNT);
+    const contract = new Contract(this.config.contractId);
+    const tx = new TransactionBuilder(account, { fee: BASE_FEE, networkPassphrase: this.config.networkPassphrase }).addOperation(contract.call("get_invoice_memo_ext", nativeToScVal(invoiceId, {type:"u64"}))).setTimeout(30).build();
+    const sim = await this.server.simulateTransaction(tx);
+    if ("error" in sim) throw mapContractError(`Simulation failed: ${sim.error}`, invoiceId);
+    const raw = scValToNative((sim as any).result.retval) as any;
+    if (!raw) return null;
+    return { memo: String(raw.memo), updatedAt: Number(raw.updated_at ?? 0) };
+  }
+  async setInvoiceMemoExt(caller: string, invoiceId: number, memo: string): Promise<{txHash:string}> {
+    const args=[new Address(caller).toScVal(), nativeToScVal(invoiceId,{type:"u64"}), nativeToScVal(memo,{type:"string"})];
+    const {txHash}=await this.buildAndSubmit(caller,"set_invoice_memo_ext",args,invoiceId);
+    return {txHash};
   }
 }
 
