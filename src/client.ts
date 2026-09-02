@@ -1194,6 +1194,12 @@ async getInvoiceMemoExt(invoiceId: number): Promise<InvoiceExtraMemo | null> {
     const {txHash}=await this.buildAndSubmit(caller,"set_invoice_memo_ext",args,invoiceId);
     return {txHash};
   }
+
+async refundBatch(caller: string, invoiceIds: number[]): Promise<{count:number; txHash:string}> {
+    const idsArg = xdr.ScVal.scvVec(invoiceIds.map(id=> nativeToScVal(id,{type:"u64"})));
+    const {txHash, result}=await this.buildAndSubmit(caller,"refund_batch",[new Address(caller).toScVal(), idsArg]);
+    return {count: Number(scValToNative(result)), txHash};
+  }
 }
 
 function buildInvoiceOptions(params: CreateInvoiceParams): xdr.ScVal {
