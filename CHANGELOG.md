@@ -1,6 +1,7 @@
 # Changelog
 
 ## [Unreleased]
+- feat(sdk): streaming client — createStream/withdrawVested/cancelStream/topUpStream + streaming errors
 - feat(sdk): archival — archive/isArchived/unarchive
 - feat(sdk): approval — set/approve/getApproval
 - feat(sdk): template — create/getTemplate
@@ -16,6 +17,7 @@
 - `getInvoicesByCreator(creator)` — fetch all invoice IDs created by an address using on-chain creator index
 - `claim(account, token)` — withdraw credited balance after failed recipient transfer (fallback recovery)
 - `getClaimableBalance(account, token)` — query internal credited balance for account/token pair
+- `createStream/withdrawVested/cancelStream/topUpStream` — linear-vesting token streams with cliff and cancelable flag
 
 ## [0.2.0] - 2026-07-18
 
