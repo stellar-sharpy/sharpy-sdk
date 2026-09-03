@@ -139,7 +139,7 @@ export function useInvoicesByCreator(
   creator: string | null | undefined,
   opts: UseInvoicesByCreatorOptions = {}
 ): UseInvoicesByCreatorResult {
-  const { limit, offset, enabled = true } = opts;
+  const { limit, offset, enabled = true, refreshInterval } = opts;
   const [ids, setIds] = useState<number[]>([]);
   const [total, setTotal] = useState<number | null>(null);
   const [loading, setLoading] = useState<boolean>(enabled && !!creator);
@@ -177,6 +177,12 @@ export function useInvoicesByCreator(
   useEffect(() => {
     void fetchIds();
   }, [fetchIds]);
+
+  useEffect(() => {
+    if (!refreshInterval || !creator || !enabled) return;
+    const timer = setInterval(() => void fetchIds(), refreshInterval);
+    return () => clearInterval(timer);
+  }, [fetchIds, refreshInterval, creator, enabled]);
 
   return { ids, total, loading, error, creator: creator ?? null, refresh: fetchIds };
 }
