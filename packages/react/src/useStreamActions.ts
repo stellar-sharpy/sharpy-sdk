@@ -1,3 +1,4 @@
+import { useCallback, useState } from "react";
 import type { SharpyClient, CreateStreamParams } from "@stellar-sharpy/sdk";
 
 /**
@@ -19,3 +20,45 @@ export interface StreamMutationResult<T> {
 }
 
 export type CreateStreamArgs = CreateStreamParams;
+
+/**
+ * Mutation hook for `SharpyClient.createStream`.
+ * @param client Configured SharpyClient with signing capability
+ * @param opts onSuccess/onError callbacks
+ */
+export function useCreateStream(
+  client: SharpyClient,
+  opts: StreamActionOptions = {}
+): {
+  create: (args: CreateStreamArgs) => Promise<{ streamId: number; txHash: string }>;
+  loading: boolean;
+  error: Error | null;
+  data: { streamId: number; txHash: string } | null;
+} {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+  const [data, setData] = useState<{ streamId: number; txHash: string } | null>(null);
+
+  const create = useCallback(
+    async (args: CreateStreamArgs) => {
+      setLoading(true);
+      setError(null);
+      try {
+        const result = await client.createStream(args);
+        setData(result);
+        opts.onSuccess?.(result.txHash);
+        return result;
+      } catch (e) {
+        const err = e instanceof Error ? e : new Error(String(e));
+        setError(err);
+        opts.onError?.(err);
+        throw err;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [client, opts.onSuccess, opts.onError]
+  );
+
+  return { create, loading, error, data };
+}
