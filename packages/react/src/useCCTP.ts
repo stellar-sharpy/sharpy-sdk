@@ -74,7 +74,7 @@ export function useCctpAttestation(client: SharpyClient) {
         setStatus("ready");
         return result;
       } catch (e) {
-        const err = e instanceof Error ? e : new Error(String(e));
+        const err = mapCctpError(e, "attest");
         setError(err);
         setStatus("error");
         opts?.onError?.(err);
