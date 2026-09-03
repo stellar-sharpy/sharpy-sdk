@@ -205,6 +205,19 @@ const { complete } = useCompleteCctpInbound(client);
 await complete(caller, att.message, att.attestation);
 ```
 
+#### React Invoice Hooks (`@stellar-sharpy/react`)
+
+```tsx
+const { invoice, invoiceId, loading, error, refresh } = useInvoice(client, id, {
+  refreshInterval: 10_000,
+  refreshOnIdChange: true,
+});
+const { ids, total, creator, loading: listLoading } = useInvoicesByCreator(client, creatorAddr, {
+  limit: 10,
+  offset: 0,
+});
+```
+
 ---
 
 ### Wallet Helpers
