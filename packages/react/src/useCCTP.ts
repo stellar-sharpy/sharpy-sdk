@@ -60,3 +60,40 @@ export function useCctpAttestation(client: SharpyClient) {
 
   return { data, status, loading, error, poll };
 }
+
+/**
+ * Completes an inbound CCTP transfer via `SharpyClient.completeCctpInbound`.
+ * Call after attestation is ready (see useCctpAttestation).
+ */
+export function useCompleteCctpInbound(client: SharpyClient) {
+  const [txHash, setTxHash] = useState<string | null>(null);
+  const [status, setStatus] = useState<CctpStatus>("idle");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+
+  const complete = useCallback(
+    async (caller: string, message: string, attestation: string, opts?: CctpHookOptions) => {
+      setLoading(true);
+      setStatus("submitting");
+      setError(null);
+      try {
+        const result = await client.completeCctpInbound(caller, message, attestation);
+        setTxHash(result.txHash);
+        setStatus("done");
+        opts?.onSuccess?.(result.txHash);
+        return result;
+      } catch (e) {
+        const err = e instanceof Error ? e : new Error(String(e));
+        setError(err);
+        setStatus("error");
+        opts?.onError?.(err);
+        throw err;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [client]
+  );
+
+  return { txHash, status, loading, error, complete };
+}
