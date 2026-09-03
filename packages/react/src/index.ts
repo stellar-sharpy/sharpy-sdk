@@ -31,6 +31,8 @@ export interface UseInvoiceOptions {
   refreshInterval?: number;
   /** Whether to fetch on mount (default: true) */
   enabled?: boolean;
+  /** When true (default), clears stale invoice when id changes */
+  refreshOnIdChange?: boolean;
 }
 
 export interface UseInvoiceResult {
@@ -59,7 +61,7 @@ export function useInvoice(
   id: number | null | undefined,
   opts: UseInvoiceOptions = {}
 ): UseInvoiceResult {
-  const { refreshInterval, enabled = true } = opts;
+  const { refreshInterval, enabled = true, refreshOnIdChange = true } = opts;
   const [invoice, setInvoice] = useState<Invoice | null>(null);
   const [loading, setLoading] = useState<boolean>(enabled && id != null);
   const [error, setError] = useState<Error | null>(null);
