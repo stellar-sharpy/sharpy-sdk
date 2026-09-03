@@ -158,6 +158,29 @@ new SharpyClient(config: SharpyClientConfig)
 | `getInvoiceFingerprint(invoiceId)` | `Promise<string>` | CAP-75/82 | SHA-256 tamper-evident content hash |
 | `previewPayout(invoiceId, amount)` | `Promise<bigint[]>` | CAP-82 | Preview split distribution with checked arithmetic |
 
+#### Streaming Methods
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `createStream(params)` | `Promise<{ streamId, txHash }>` | Create a linear-vesting token stream |
+| `withdrawVested(caller, streamId)` | `Promise<{ txHash }>` | Withdraw vested amount for a stream |
+| `cancelStream(caller, streamId)` | `Promise<{ txHash }>` | Cancel a stream and reclaim unvested funds |
+| `topUpStream(caller, streamId, amount)` | `Promise<{ txHash }>` | Add funds to an existing stream |
+
+```typescript
+const { streamId } = await client.createStream({
+  creator: publicKey,
+  recipient: "GDEF...RECIPIENT",
+  token: "USDC_CONTRACT_ADDRESS",
+  totalAmount: parseAmount("1000"),
+  startAt: Math.floor(Date.now() / 1000),
+  endAt: deadlineFromDays(30),
+});
+await client.withdrawVested(publicKey, streamId);
+await client.topUpStream(publicKey, streamId, parseAmount("100"));
+await client.cancelStream(publicKey, streamId);
+```
+
 ---
 
 ### Wallet Helpers
