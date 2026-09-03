@@ -114,6 +114,8 @@ export interface UseInvoicesByCreatorResult {
   total: number | null;
   loading: boolean;
   error: Error | null;
+  /** Echo of the creator arg for tracking */
+  creator: string | null;
   refresh: () => Promise<void>;
 }
 
@@ -167,7 +169,7 @@ export function useInvoicesByCreator(
     void fetchIds();
   }, [fetchIds]);
 
-  return { ids, total, loading, error, refresh: fetchIds };
+  return { ids, total, loading, error, creator: creator ?? null, refresh: fetchIds };
 }
 
 // ---------------------------------------------------------------------------
