@@ -105,6 +105,8 @@ export interface UseInvoicesByCreatorOptions {
   limit?: number;
   offset?: number;
   enabled?: boolean;
+  /** Poll interval in ms; 0 or undefined disables auto-refresh */
+  refreshInterval?: number;
 }
 
 export interface UseInvoicesByCreatorResult {
