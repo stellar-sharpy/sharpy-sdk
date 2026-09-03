@@ -1388,6 +1388,13 @@ async archiveInvoice(caller: string, invoiceId: number): Promise<{txHash:string}
     return { txHash };
   }
 
+  /**
+   * Cancels a cancelable stream — sends vested funds to the recipient and
+   * returns unvested funds to the creator. Panics on-chain if the stream
+   * was created with cancelable=false.
+   * @param caller Creator address (must sign)
+   * @param streamId Target stream ID
+   */
   async cancelStream(caller: string, streamId: number): Promise<{ txHash: string }> {
     const args = [
       new Address(caller).toScVal(),
