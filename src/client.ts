@@ -92,6 +92,37 @@ export interface InvoiceStats {
   completionBps: number;
 }
 
+export interface CreateStreamParams {
+  creator: string;
+  recipient: string;
+  token: string;
+  totalAmount: bigint;
+  startAt: number;
+  endAt: number;
+  cliffAt?: number;
+  cancelable?: boolean;
+}
+
+export interface StreamInfo {
+  streamId: number;
+  creator: string;
+  recipient: string;
+  token: string;
+  totalAmount: bigint;
+  withdrawn: bigint;
+  startAt: number;
+  endAt: number;
+  cliffAt: number;
+  cancelable: boolean;
+  cancelled: boolean;
+}
+
+export interface TopUpStreamParams {
+  funder: string;
+  streamId: number;
+  amount: bigint;
+}
+
 
 export interface InvoiceExtraMemo { memo: string; updatedAt: number; }
 export interface InvoiceMetadata { entries: string[]; updatedAt: number; }
@@ -1317,6 +1348,55 @@ async archiveInvoice(caller: string, invoiceId: number): Promise<{txHash:string}
     const sim=await this.server.simulateTransaction(tx);
     if ("error" in sim) throw new Error(`Simulation failed: ${sim.error}`);
     return Boolean(scValToNative((sim as any).result.retval));
+  }
+
+  /**
+   * Creates a token stream with linear vesting between startAt and endAt.
+   * Funds are locked in the contract and vest continuously; the recipient
+   * withdraws via withdrawVested. Set cliffAt to delay vesting start and
+   * cancelable=false to make the stream irrevocable.
+   * @param params Creator, recipient, token, totalAmount, startAt, endAt, cliffAt, cancelable
+   * @returns Stream ID and transaction hash
+   */
+  async createStream(params: CreateStreamParams): Promise<{ streamId: number; txHash: string }> {
+    const args = [
+      new Address(params.creator).toScVal(),
+      new Address(params.recipient).toScVal(),
+      new Address(params.token).toScVal(),
+      nativeToScVal(params.totalAmount, { type: "i128" }),
+      nativeToScVal(params.startAt, { type: "u64" }),
+      nativeToScVal(params.endAt, { type: "u64" }),
+    ];
+    const { txHash, result } = await this.buildAndSubmit(params.creator, "create_stream", args);
+    return { streamId: Number(scValToNative(result)), txHash };
+  }
+
+  async withdrawVested(caller: string, streamId: number): Promise<{ txHash: string }> {
+    const args = [
+      new Address(caller).toScVal(),
+      nativeToScVal(streamId, { type: "u64" }),
+    ];
+    const { txHash } = await this.buildAndSubmit(caller, "withdraw_vested", args);
+    return { txHash };
+  }
+
+  async cancelStream(caller: string, streamId: number): Promise<{ txHash: string }> {
+    const args = [
+      new Address(caller).toScVal(),
+      nativeToScVal(streamId, { type: "u64" }),
+    ];
+    const { txHash } = await this.buildAndSubmit(caller, "cancel_stream", args);
+    return { txHash };
+  }
+
+  async topUpStream(caller: string, streamId: number, amount: bigint): Promise<{ txHash: string }> {
+    const args = [
+      new Address(caller).toScVal(),
+      nativeToScVal(streamId, { type: "u64" }),
+      nativeToScVal(amount, { type: "i128" }),
+    ];
+    const { txHash } = await this.buildAndSubmit(caller, "top_up_stream", args);
+    return { txHash };
   }
 }
 
