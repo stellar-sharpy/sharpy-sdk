@@ -83,7 +83,7 @@ export function useCreateStream(
         opts.onSuccess?.(result.txHash);
         return result;
       } catch (e) {
-        const err = e instanceof Error ? e : new Error(String(e));
+        const err = mapStreamError(e);
         setError(err);
         opts.onError?.(err);
         throw err;

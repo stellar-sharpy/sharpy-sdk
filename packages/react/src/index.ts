@@ -284,6 +284,5 @@ export function useWallet(opts: UseWalletOptions = {}): UseWalletResult {
 }
 
 export { useStreaming } from "./useStreaming";
-export { useCreateStream, useWithdrawVested, useCancelStream, useTopUpStream } from "./useStreamActions";
+export { useCreateStream, useWithdrawVested, useCancelStream, useTopUpStream, mapStreamError } from "./useStreamActions";
 export type { StreamActionOptions, StreamMutationResult, CreateStreamArgs } from "./useStreamActions";
-}
