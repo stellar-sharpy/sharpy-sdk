@@ -364,7 +364,9 @@ The SDK ships 35 focused utility modules alongside the core client:
 
 | Module | Description |
 |--------|-------------|
-| `client.ts` | `SharpyClient` — all contract methods |
+| `client.ts` | `SharpyClient` — all contract methods (invoices, streaming, CCTP, archival) |
+| `errors.ts` | Typed errors incl. streaming errors |
+| `apireference.ts` | API reference index |
 | `wallet.ts` | Freighter v3 wallet helpers |
 | `utils.ts` | `parseAmount`, `formatAmount`, `deadlineFromDays`, etc. |
 | `errors.ts` | Typed error classes |
