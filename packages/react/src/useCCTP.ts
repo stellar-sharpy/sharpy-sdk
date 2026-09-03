@@ -1,5 +1,19 @@
 /**
  * Shared options for CCTP hooks.
+ * @module useCCTP — React hooks for Circle CCTP inbound flows.
+ *
+ * Wraps `SharpyClient.buildCctpHookData/pollCctpAttestation/completeCctpInbound`
+ * with loading/status/error state for EVM→Stellar transfers.
+ *
+ * @example
+ * ```tsx
+ * const { build } = useCctpHookData(client);
+ * const hookData = build(forwardRecipient); // pass to EVM depositForBurnWithHook
+ * const { poll, data } = useCctpAttestation(client);
+ * await poll(evmTxHash, sourceDomain);
+ * const { complete } = useCompleteCctpInbound(client);
+ * await complete(caller, data.message, data.attestation);
+ * ```
  */
 import { useCallback, useState } from "react";
 import type { SharpyClient } from "@stellar-sharpy/sdk";
