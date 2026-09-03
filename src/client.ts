@@ -92,6 +92,37 @@ export interface InvoiceStats {
   completionBps: number;
 }
 
+export interface CreateStreamParams {
+  creator: string;
+  recipient: string;
+  token: string;
+  totalAmount: bigint;
+  startAt: number;
+  endAt: number;
+  cliffAt?: number;
+  cancelable?: boolean;
+}
+
+export interface StreamInfo {
+  streamId: number;
+  creator: string;
+  recipient: string;
+  token: string;
+  totalAmount: bigint;
+  withdrawn: bigint;
+  startAt: number;
+  endAt: number;
+  cliffAt: number;
+  cancelable: boolean;
+  cancelled: boolean;
+}
+
+export interface TopUpStreamParams {
+  funder: string;
+  streamId: number;
+  amount: bigint;
+}
+
 
 export interface InvoiceExtraMemo { memo: string; updatedAt: number; }
 export interface InvoiceMetadata { entries: string[]; updatedAt: number; }
