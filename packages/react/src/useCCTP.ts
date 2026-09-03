@@ -97,3 +97,15 @@ export function useCompleteCctpInbound(client: SharpyClient) {
 
   return { txHash, status, loading, error, complete };
 }
+
+/**
+ * Builds CCTP hookData for `depositForBurnWithHook` via `SharpyClient.buildCctpHookData`.
+ * Pure helper — no network calls.
+ */
+export function useCctpHookData(client: SharpyClient) {
+  const build = useCallback(
+    (forwardRecipient: string) => client.buildCctpHookData(forwardRecipient),
+    [client]
+  );
+  return { build };
+}
