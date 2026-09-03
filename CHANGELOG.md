@@ -21,6 +21,10 @@
 - `claim(account, token)` — withdraw credited balance after failed recipient transfer (fallback recovery)
 - `getClaimableBalance(account, token)` — query internal credited balance for account/token pair
 - `createStream/withdrawVested/cancelStream/topUpStream` — linear-vesting token streams with cliff and cancelable flag
+- `useCreateStream/useWithdrawVested/useCancelStream/useTopUpStream` — React mutation hooks for streams
+- `useCctpHookData/useCctpAttestation/useCompleteCctpInbound` — React hooks for CCTP inbound flows
+- `useInvoice` invoiceId tracking + refreshOnIdChange; `useInvoicesByCreator` creator/total + polling
+- Docs polish — quickstart streaming, CCTP end-to-end, API reference, typed error docs
 
 ## [0.2.0] - 2026-07-18
 

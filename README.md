@@ -86,6 +86,16 @@ await client.pay(publicKey, invoiceId, parseAmount("1000"));
 // Fetch status
 const invoice = await client.getInvoice(invoiceId);
 console.log(invoice.status); // "Released"
+
+// Create a vesting stream — 1000 USDC over 30 days
+const { streamId } = await client.createStream({
+  creator: publicKey,
+  recipient: "GDEF...RECIPIENT",
+  token: "USDC_CONTRACT_ADDRESS",
+  totalAmount: parseAmount("1000"),
+  startAt: Math.floor(Date.now() / 1000),
+  endAt: deadlineFromDays(30),
+});
 ```
 
 ---
@@ -205,6 +215,12 @@ const { complete } = useCompleteCctpInbound(client);
 await complete(caller, att.message, att.attestation);
 ```
 
+##### CCTP end-to-end (EVM → Stellar)
+
+1. Build `hookData` with `client.buildCctpHookData(forwardRecipient)` and pass it to the EVM `depositForBurnWithHook` call (mintRecipient = destinationCaller = CctpForwarder).
+2. Wait for Circle attestation with `pollCctpAttestation(evmTxHash, sourceDomain)` or `useCctpAttestation`.
+3. Complete on Stellar with `completeCctpInbound(caller, message, attestation)` or `useCompleteCctpInbound`.
+
 #### React Invoice Hooks (`@stellar-sharpy/react`)
 
 ```tsx
@@ -269,6 +285,10 @@ import {
   DeadlinePassedError,
   InvoiceNotPendingError,
   OverpaymentError,
+  StreamingNotFoundError,
+  StreamingInvalidArgsError,
+  StreamingPausedError,
+  StreamingNotInitializedError,
 } from "@stellar-sharpy/sdk";
 
 try {
@@ -278,6 +298,18 @@ try {
     console.error("Invoice deadline has passed");
   } else if (e instanceof OverpaymentError) {
     console.error("Payment exceeds remaining balance");
+  }
+}
+
+try {
+  await client.withdrawVested(publicKey, streamId);
+} catch (e) {
+  if (e instanceof StreamingNotFoundError) {
+    console.error("Stream does not exist");
+  } else if (e instanceof StreamingPausedError) {
+    console.error("Stream is paused");
+  } else if (e instanceof StreamingInvalidArgsError) {
+    console.error("Bad streaming args");
   }
 }
 ```
@@ -332,7 +364,9 @@ The SDK ships 35 focused utility modules alongside the core client:
 
 | Module | Description |
 |--------|-------------|
-| `client.ts` | `SharpyClient` — all contract methods |
+| `client.ts` | `SharpyClient` — all contract methods (invoices, streaming, CCTP, archival) |
+| `errors.ts` | Typed errors incl. streaming errors |
+| `apireference.ts` | API reference index |
 | `wallet.ts` | Freighter v3 wallet helpers |
 | `utils.ts` | `parseAmount`, `formatAmount`, `deadlineFromDays`, etc. |
 | `errors.ts` | Typed error classes |

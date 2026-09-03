@@ -1371,6 +1371,14 @@ async archiveInvoice(caller: string, invoiceId: number): Promise<{txHash:string}
     return { streamId: Number(scValToNative(result)), txHash };
   }
 
+  /**
+   * Withdraws all currently vested (but unclaimed) tokens to the recipient.
+   * Vesting is linear between startAt/endAt with optional cliff; calling
+   * before the cliff or when nothing has vested is a no-op on-chain.
+   * @param caller Recipient address (must sign)
+   * @param streamId Target stream ID
+   * @throws {StreamingNotFoundError} When mapped from contract "not found"
+   */
   async withdrawVested(caller: string, streamId: number): Promise<{ txHash: string }> {
     const args = [
       new Address(caller).toScVal(),
@@ -1380,6 +1388,13 @@ async archiveInvoice(caller: string, invoiceId: number): Promise<{txHash:string}
     return { txHash };
   }
 
+  /**
+   * Cancels a cancelable stream — sends vested funds to the recipient and
+   * returns unvested funds to the creator. Panics on-chain if the stream
+   * was created with cancelable=false.
+   * @param caller Creator address (must sign)
+   * @param streamId Target stream ID
+   */
   async cancelStream(caller: string, streamId: number): Promise<{ txHash: string }> {
     const args = [
       new Address(caller).toScVal(),
@@ -1389,6 +1404,13 @@ async archiveInvoice(caller: string, invoiceId: number): Promise<{txHash:string}
     return { txHash };
   }
 
+  /**
+   * Adds funds to an existing stream, extending its total without changing
+   * the vesting schedule. Anyone can fund; only vested math changes.
+   * @param caller Funder address (must sign)
+   * @param streamId Target stream ID
+   * @param amount Additional amount in stroops (must be positive)
+   */
   async topUpStream(caller: string, streamId: number, amount: bigint): Promise<{ txHash: string }> {
     const args = [
       new Address(caller).toScVal(),
