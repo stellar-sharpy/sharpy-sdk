@@ -192,6 +192,19 @@ const { cancel } = useCancelStream(client);
 const { topUp } = useTopUpStream(client);
 ```
 
+#### React CCTP Hooks (`@stellar-sharpy/react`)
+
+```tsx
+import { useCctpHookData, useCctpAttestation, useCompleteCctpInbound } from "@stellar-sharpy/react";
+
+const { build } = useCctpHookData(client);
+const hookData = build("GDEF...FORWARD_RECIPIENT");
+const { poll, data: att } = useCctpAttestation(client);
+await poll(evmTxHash, 6); // Base domain
+const { complete } = useCompleteCctpInbound(client);
+await complete(caller, att.message, att.attestation);
+```
+
 ---
 
 ### Wallet Helpers
