@@ -18,6 +18,20 @@
 import { useCallback, useState } from "react";
 import type { SharpyClient } from "@stellar-sharpy/sdk";
 
+/**
+ * Normalizes CCTP failures (attestation timeout, mint_and_forward revert)
+ * into readable errors with status context.
+ */
+export function mapCctpError(e: unknown, stage: "attest" | "complete"): Error {
+  if (e instanceof Error) {
+    const m = e.message.toLowerCase();
+    if (m.includes("attestation not complete")) return new Error(`CCTP attestation timeout [${stage}]: ${e.message}`);
+    if (m.includes("simulation failed") || m.includes("mint_and_forward")) return new Error(`CCTP inbound failed [${stage}]: ${e.message}`);
+    return e;
+  }
+  return new Error(`CCTP error [${stage}]: ${String(e)}`);
+}
+
 export interface CctpHookOptions {
   /** Poll interval in ms for attestation (default 5000) */
   intervalMs?: number;
