@@ -32,3 +32,31 @@ export class CallerNotCreatorError extends Error {
     this.name = "CallerNotCreatorError";
   }
 }
+
+export class StreamingNotFoundError extends Error {
+  constructor(streamId: number) {
+    super(`Stream #${streamId} not found`);
+    this.name = "StreamingNotFoundError";
+  }
+}
+
+export class StreamingInvalidArgsError extends Error {
+  constructor(reason: string) {
+    super(`Invalid streaming args: ${reason}`);
+    this.name = "StreamingInvalidArgsError";
+  }
+}
+
+export class StreamingPausedError extends Error {
+  constructor(streamId: number) {
+    super(`Stream #${streamId} is paused`);
+    this.name = "StreamingPausedError";
+  }
+}
+
+export class StreamingNotInitializedError extends Error {
+  constructor() {
+    super("Streaming module not initialized for this contract");
+    this.name = "StreamingNotInitializedError";
+  }
+}
