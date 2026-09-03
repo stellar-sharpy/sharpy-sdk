@@ -1349,6 +1349,19 @@ async archiveInvoice(caller: string, invoiceId: number): Promise<{txHash:string}
     if ("error" in sim) throw new Error(`Simulation failed: ${sim.error}`);
     return Boolean(scValToNative((sim as any).result.retval));
   }
+
+  async createStream(params: CreateStreamParams): Promise<{ streamId: number; txHash: string }> {
+    const args = [
+      new Address(params.creator).toScVal(),
+      new Address(params.recipient).toScVal(),
+      new Address(params.token).toScVal(),
+      nativeToScVal(params.totalAmount, { type: "i128" }),
+      nativeToScVal(params.startAt, { type: "u64" }),
+      nativeToScVal(params.endAt, { type: "u64" }),
+    ];
+    const { txHash, result } = await this.buildAndSubmit(params.creator, "create_stream", args);
+    return { streamId: Number(scValToNative(result)), txHash };
+  }
 }
 
 function buildInvoiceOptions(params: CreateInvoiceParams): xdr.ScVal {
