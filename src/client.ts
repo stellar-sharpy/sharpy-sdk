@@ -1404,6 +1404,13 @@ async archiveInvoice(caller: string, invoiceId: number): Promise<{txHash:string}
     return { txHash };
   }
 
+  /**
+   * Adds funds to an existing stream, extending its total without changing
+   * the vesting schedule. Anyone can fund; only vested math changes.
+   * @param caller Funder address (must sign)
+   * @param streamId Target stream ID
+   * @param amount Additional amount in stroops (must be positive)
+   */
   async topUpStream(caller: string, streamId: number, amount: bigint): Promise<{ txHash: string }> {
     const args = [
       new Address(caller).toScVal(),
