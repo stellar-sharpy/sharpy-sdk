@@ -1380,6 +1380,16 @@ async archiveInvoice(caller: string, invoiceId: number): Promise<{txHash:string}
     const { txHash } = await this.buildAndSubmit(caller, "cancel_stream", args);
     return { txHash };
   }
+
+  async topUpStream(caller: string, streamId: number, amount: bigint): Promise<{ txHash: string }> {
+    const args = [
+      new Address(caller).toScVal(),
+      nativeToScVal(streamId, { type: "u64" }),
+      nativeToScVal(amount, { type: "i128" }),
+    ];
+    const { txHash } = await this.buildAndSubmit(caller, "top_up_stream", args);
+    return { txHash };
+  }
 }
 
 function buildInvoiceOptions(params: CreateInvoiceParams): xdr.ScVal {
