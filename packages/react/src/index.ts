@@ -37,6 +37,8 @@ export interface UseInvoiceResult {
   invoice: Invoice | null;
   loading: boolean;
   error: Error | null;
+  /** Currently tracked invoice ID (mirrors the `id` arg) */
+  invoiceId: number | null;
   /** Manually re-fetch */
   refresh: () => Promise<void>;
 }
@@ -86,7 +88,7 @@ export function useInvoice(
     return () => clearInterval(timer);
   }, [fetchInvoice, refreshInterval, id, enabled]);
 
-  return { invoice, loading, error, refresh: fetchInvoice };
+  return { invoice, loading, error, invoiceId: id ?? null, refresh: fetchInvoice };
 }
 
 // ---------------------------------------------------------------------------
