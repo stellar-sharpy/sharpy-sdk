@@ -18,8 +18,11 @@ export type {
   InvoiceExtraMemo,
   DisputeState,
   InvoiceStats,
+  CreateStreamParams,
+  StreamInfo,
+  TopUpStreamParams,
 } from "./client.js";
-export { InvoiceNotFoundError, DeadlinePassedError, InvoiceNotPendingError, OverpaymentError, CallerNotCreatorError } from "./errors.js";
+export { InvoiceNotFoundError, DeadlinePassedError, InvoiceNotPendingError, OverpaymentError, CallerNotCreatorError, StreamingNotFoundError, StreamingInvalidArgsError, StreamingPausedError, StreamingNotInitializedError } from "./errors.js";
 export { connectWallet, getWalletPublicKey, signTransaction } from "./wallet.js";
 export { parseAmount, formatAmount, deadlineFromDays, isExpired, isValidAddress, truncateAddress, explorerUrl } from "./utils.js";
 
