@@ -33,6 +33,10 @@ export class CallerNotCreatorError extends Error {
   }
 }
 
+/**
+ * Typed errors for streaming flows.
+ * Catch these instead of parsing raw contract messages.
+ */
 export class StreamingNotFoundError extends Error {
   constructor(streamId: number) {
     super(`Stream #${streamId} not found`);
