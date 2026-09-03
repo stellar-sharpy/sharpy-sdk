@@ -1,6 +1,7 @@
 # Changelog
 
 ## [Unreleased]
+- feat(react): invoice hooks — useInvoice invoiceId tracking + refreshOnIdChange, useInvoicesByCreator creator/total/pagination
 - feat(react): CCTP hooks — useCctpHookData/useCctpAttestation/useCompleteCctpInbound
 - feat(react): streaming hooks — useCreateStream/useWithdrawVested/useCancelStream/useTopUpStream
 - feat(sdk): streaming client — createStream/withdrawVested/cancelStream/topUpStream + streaming errors
