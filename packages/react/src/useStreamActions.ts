@@ -1,0 +1,219 @@
+import { useCallback, useState } from "react";
+import type { SharpyClient, CreateStreamParams } from "@stellar-sharpy/sdk";
+import { StreamingNotFoundError, StreamingInvalidArgsError } from "@stellar-sharpy/sdk";
+
+/**
+ * Normalizes raw contract failures into typed streaming errors.
+ * Pass-through for already-typed errors; maps "not found" messages.
+ */
+export function mapStreamError(e: unknown, streamId?: number): Error {
+  if (e instanceof Error) {
+    const m = e.message.toLowerCase();
+    if (m.includes("not found") && streamId !== undefined) return new StreamingNotFoundError(streamId);
+    if (m.includes("invalid") || m.includes("args")) return new StreamingInvalidArgsError(e.message);
+    return e;
+  }
+  return new Error(String(e));
+}
+
+/**
+ * @module useStreamActions — React mutation hooks for token streams.
+ *
+ * Wraps `SharpyClient.createStream/withdrawVested/cancelStream/topUpStream`
+ * with loading/error/txHash state and optional onSuccess/onError callbacks.
+ *
+ * @example
+ * ```tsx
+ * const client = new SharpyClient({ ...NETWORKS.testnet, signTransaction });
+ * const { create, loading } = useCreateStream(client);
+ * const { withdraw } = useWithdrawVested(client);
+ * const { cancel } = useCancelStream(client);
+ * const { topUp } = useTopUpStream(client);
+ *
+ * await create({ creator, recipient, token, totalAmount: 1000n, startAt, endAt });
+ * ```
+ */
+
+/**
+ * Shared mutation state for streaming actions.
+ * Maps contract errors to typed SDK errors where possible.
+ */
+export interface StreamActionOptions {
+  /** Called on successful submission with tx hash */
+  onSuccess?: (txHash: string) => void;
+  /** Called on error */
+  onError?: (error: Error) => void;
+}
+
+export interface StreamMutationResult<T> {
+  /** Execute the mutation */
+  run: (args: T) => Promise<{ txHash: string } & Partial<{ streamId: number }>>;
+  loading: boolean;
+  error: Error | null;
+  txHash: string | null;
+}
+
+export type CreateStreamArgs = CreateStreamParams;
+
+/**
+ * Mutation hook for `SharpyClient.createStream`.
+ * @param client Configured SharpyClient with signing capability
+ * @param opts onSuccess/onError callbacks
+ */
+export function useCreateStream(
+  client: SharpyClient,
+  opts: StreamActionOptions = {}
+): {
+  create: (args: CreateStreamArgs) => Promise<{ streamId: number; txHash: string }>;
+  loading: boolean;
+  error: Error | null;
+  data: { streamId: number; txHash: string } | null;
+} {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+  const [data, setData] = useState<{ streamId: number; txHash: string } | null>(null);
+
+  const create = useCallback(
+    async (args: CreateStreamArgs) => {
+      setLoading(true);
+      setError(null);
+      try {
+        const result = await client.createStream(args);
+        setData(result);
+        opts.onSuccess?.(result.txHash);
+        return result;
+      } catch (e) {
+        const err = mapStreamError(e);
+        setError(err);
+        opts.onError?.(err);
+        throw err;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [client, opts.onSuccess, opts.onError]
+  );
+
+  return { create, loading, error, data };
+}
+
+/**
+ * Mutation hook for `SharpyClient.withdrawVested`.
+ * @param client Configured SharpyClient with signing capability
+ */
+export function useWithdrawVested(
+  client: SharpyClient,
+  opts: StreamActionOptions = {}
+): {
+  withdraw: (caller: string, streamId: number) => Promise<{ txHash: string }>;
+  loading: boolean;
+  error: Error | null;
+  txHash: string | null;
+} {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+  const [txHash, setTxHash] = useState<string | null>(null);
+
+  const withdraw = useCallback(
+    async (caller: string, streamId: number) => {
+      setLoading(true);
+      setError(null);
+      try {
+        const result = await client.withdrawVested(caller, streamId);
+        setTxHash(result.txHash);
+        opts.onSuccess?.(result.txHash);
+        return result;
+      } catch (e) {
+        const err = e instanceof Error ? e : new Error(String(e));
+        setError(err);
+        opts.onError?.(err);
+        throw err;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [client, opts.onSuccess, opts.onError]
+  );
+
+  return { withdraw, loading, error, txHash };
+}
+
+/**
+ * Mutation hook for `SharpyClient.cancelStream`.
+ */
+export function useCancelStream(
+  client: SharpyClient,
+  opts: StreamActionOptions = {}
+): {
+  cancel: (caller: string, streamId: number) => Promise<{ txHash: string }>;
+  loading: boolean;
+  error: Error | null;
+  txHash: string | null;
+} {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+  const [txHash, setTxHash] = useState<string | null>(null);
+
+  const cancel = useCallback(
+    async (caller: string, streamId: number) => {
+      setLoading(true);
+      setError(null);
+      try {
+        const result = await client.cancelStream(caller, streamId);
+        setTxHash(result.txHash);
+        opts.onSuccess?.(result.txHash);
+        return result;
+      } catch (e) {
+        const err = e instanceof Error ? e : new Error(String(e));
+        setError(err);
+        opts.onError?.(err);
+        throw err;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [client, opts.onSuccess, opts.onError]
+  );
+
+  return { cancel, loading, error, txHash };
+}
+
+/**
+ * Mutation hook for `SharpyClient.topUpStream`.
+ */
+export function useTopUpStream(
+  client: SharpyClient,
+  opts: StreamActionOptions = {}
+): {
+  topUp: (caller: string, streamId: number, amount: bigint) => Promise<{ txHash: string }>;
+  loading: boolean;
+  error: Error | null;
+  txHash: string | null;
+} {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+  const [txHash, setTxHash] = useState<string | null>(null);
+
+  const topUp = useCallback(
+    async (caller: string, streamId: number, amount: bigint) => {
+      setLoading(true);
+      setError(null);
+      try {
+        const result = await client.topUpStream(caller, streamId, amount);
+        setTxHash(result.txHash);
+        opts.onSuccess?.(result.txHash);
+        return result;
+      } catch (e) {
+        const err = e instanceof Error ? e : new Error(String(e));
+        setError(err);
+        opts.onError?.(err);
+        throw err;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [client, opts.onSuccess, opts.onError]
+  );
+
+  return { topUp, loading, error, txHash };
+}

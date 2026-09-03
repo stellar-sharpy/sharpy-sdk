@@ -1,6 +1,7 @@
 # Changelog
 
 ## [Unreleased]
+- feat(react): streaming hooks — useCreateStream/useWithdrawVested/useCancelStream/useTopUpStream
 - feat(sdk): streaming client — createStream/withdrawVested/cancelStream/topUpStream + streaming errors
 - feat(sdk): archival — archive/isArchived/unarchive
 - feat(sdk): approval — set/approve/getApproval
