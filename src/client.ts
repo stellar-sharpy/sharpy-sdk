@@ -1350,6 +1350,14 @@ async archiveInvoice(caller: string, invoiceId: number): Promise<{txHash:string}
     return Boolean(scValToNative((sim as any).result.retval));
   }
 
+  /**
+   * Creates a token stream with linear vesting between startAt and endAt.
+   * Funds are locked in the contract and vest continuously; the recipient
+   * withdraws via withdrawVested. Set cliffAt to delay vesting start and
+   * cancelable=false to make the stream irrevocable.
+   * @param params Creator, recipient, token, totalAmount, startAt, endAt, cliffAt, cancelable
+   * @returns Stream ID and transaction hash
+   */
   async createStream(params: CreateStreamParams): Promise<{ streamId: number; txHash: string }> {
     const args = [
       new Address(params.creator).toScVal(),
