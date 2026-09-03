@@ -181,6 +181,17 @@ await client.topUpStream(publicKey, streamId, parseAmount("100"));
 await client.cancelStream(publicKey, streamId);
 ```
 
+#### React Streaming Hooks (`@stellar-sharpy/react`)
+
+```tsx
+import { useCreateStream, useWithdrawVested, useCancelStream, useTopUpStream } from "@stellar-sharpy/react";
+
+const { create, loading, data } = useCreateStream(client);
+const { withdraw } = useWithdrawVested(client);
+const { cancel } = useCancelStream(client);
+const { topUp } = useTopUpStream(client);
+```
+
 ---
 
 ### Wallet Helpers
