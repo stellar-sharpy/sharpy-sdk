@@ -1,6 +1,9 @@
 /**
  * Shared options for CCTP hooks.
  */
+import { useCallback, useState } from "react";
+import type { SharpyClient } from "@stellar-sharpy/sdk";
+
 export interface CctpHookOptions {
   /** Poll interval in ms for attestation (default 5000) */
   intervalMs?: number;
@@ -18,3 +21,42 @@ export interface CctpAttestation {
 }
 
 export type CctpStatus = "idle" | "polling" | "ready" | "submitting" | "done" | "error";
+
+/**
+ * Polls Circle attestation API via `SharpyClient.pollCctpAttestation`.
+ * @param client Configured SharpyClient
+ */
+export function useCctpAttestation(client: SharpyClient) {
+  const [data, setData] = useState<CctpAttestation | null>(null);
+  const [status, setStatus] = useState<CctpStatus>("idle");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+
+  const poll = useCallback(
+    async (sourceTxHash: string, sourceDomain: number, opts?: CctpHookOptions) => {
+      setLoading(true);
+      setStatus("polling");
+      setError(null);
+      try {
+        const result = await client.pollCctpAttestation(sourceTxHash, sourceDomain, {
+          intervalMs: opts?.intervalMs,
+          maxAttempts: opts?.maxAttempts,
+        });
+        setData(result);
+        setStatus("ready");
+        return result;
+      } catch (e) {
+        const err = e instanceof Error ? e : new Error(String(e));
+        setError(err);
+        setStatus("error");
+        opts?.onError?.(err);
+        throw err;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [client]
+  );
+
+  return { data, status, loading, error, poll };
+}
