@@ -67,7 +67,11 @@ export function useInvoice(
   const [error, setError] = useState<Error | null>(null);
 
   const fetchInvoice = useCallback(async () => {
-    if (id == null || !enabled) return;
+    if (id == null || !enabled) {
+      if (refreshOnIdChange) setInvoice(null);
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
@@ -75,10 +79,11 @@ export function useInvoice(
       setInvoice(data);
     } catch (e) {
       setError(e instanceof Error ? e : new Error(String(e)));
+      if (refreshOnIdChange) setInvoice(null);
     } finally {
       setLoading(false);
     }
-  }, [client, id, enabled]);
+  }, [client, id, enabled, refreshOnIdChange]);
 
   useEffect(() => {
     void fetchInvoice();
