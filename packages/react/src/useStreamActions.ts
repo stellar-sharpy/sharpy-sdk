@@ -1,5 +1,20 @@
 import { useCallback, useState } from "react";
 import type { SharpyClient, CreateStreamParams } from "@stellar-sharpy/sdk";
+import { StreamingNotFoundError, StreamingInvalidArgsError } from "@stellar-sharpy/sdk";
+
+/**
+ * Normalizes raw contract failures into typed streaming errors.
+ * Pass-through for already-typed errors; maps "not found" messages.
+ */
+export function mapStreamError(e: unknown, streamId?: number): Error {
+  if (e instanceof Error) {
+    const m = e.message.toLowerCase();
+    if (m.includes("not found") && streamId !== undefined) return new StreamingNotFoundError(streamId);
+    if (m.includes("invalid") || m.includes("args")) return new StreamingInvalidArgsError(e.message);
+    return e;
+  }
+  return new Error(String(e));
+}
 
 /**
  * @module useStreamActions — React mutation hooks for token streams.
@@ -21,6 +36,7 @@ import type { SharpyClient, CreateStreamParams } from "@stellar-sharpy/sdk";
 
 /**
  * Shared mutation state for streaming actions.
+ * Maps contract errors to typed SDK errors where possible.
  */
 export interface StreamActionOptions {
   /** Called on successful submission with tx hash */
