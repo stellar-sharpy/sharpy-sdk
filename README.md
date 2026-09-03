@@ -42,7 +42,7 @@ npm install @stellar-sharpy/sdk
 - [Pitch Deck](https://gamma.app/docs/Split-Payments-on-Stellar-s0et8z1agtva59n)
 - [Demo Video](https://www.loom.com/share/09aa4a78e0c944dcab866a7036fde24d)
 
-### 🎯 Live Testnet Transactions
+### Live Testnet Transactions
 
 See the SDK in action with real on-chain transactions:
 
@@ -234,6 +234,22 @@ const { ids, total, creator, loading: listLoading } = useInvoicesByCreator(clien
 });
 ```
 
+#### Extension Methods (invoice metadata & lifecycle)
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `getInvoiceTags(invoiceId)` / `setInvoiceTags(caller, invoiceId, tags)` | `Promise<InvoiceTags \| null>` / `Promise<{ txHash }>` | Creator tags, max 10 at 32 chars each |
+| `getInvoiceMemoExt(invoiceId)` / `setInvoiceMemoExt(caller, invoiceId, memo)` | `Promise<InvoiceExtraMemo \| null>` / `Promise<{ txHash }>` | Creator memo, 256 chars |
+| `refundBatch(caller, invoiceIds)` | `Promise<{ count, txHash }>` | Refund up to 10 deadline-passed invoices in one call |
+| `extendDeadline(caller, invoiceId, newDeadline)` | `Promise<{ txHash }>` | Creator pushes deadline forward |
+| `getInvoiceMetadata(invoiceId)` / `setInvoiceMetadata(caller, invoiceId, entries)` | `Promise<InvoiceMetadata \| null>` / `Promise<{ txHash }>` | Key-value metadata entries |
+| `getDiscount(invoiceId)` / `setDiscount(caller, invoiceId, discountBps)` | `Promise<DiscountConfig \| null>` / `Promise<{ txHash }>` | Discount in basis points |
+| `pauseRecurring(caller, invoiceId)` / `resumeRecurring(caller, invoiceId)` / `isRecurringPaused(invoiceId)` | `Promise<{ txHash }>` / `Promise<boolean>` | Pause/resume recurring chain spawning |
+| `createTemplate(caller, name, recipients, amounts)` / `getTemplate(templateId)` | `Promise<{ templateId, txHash }>` / `Promise<InvoiceTemplate \| null>` | Reusable invoice configs |
+| `setApprovalConfig(caller, invoiceId, approvers, required)` / `approveInvoice(approver, invoiceId)` / `getApprovalState(invoiceId)` | `Promise<{ txHash }>` / `Promise<ApprovalState \| null>` | Multi-approver workflow |
+| `archiveInvoice(caller, invoiceId)` / `unarchiveInvoice(caller, invoiceId)` / `isArchived(invoiceId)` | `Promise<{ txHash }>` / `Promise<boolean>` | Terminal invoice archiving |
+| `getInvoiceNotes(invoiceId)` / `setInvoiceNotes(caller, invoiceId, text)` | `Promise<InvoiceNotes \| null>` / `Promise<{ txHash }>` | Creator free-text notes |
+
 ---
 
 ### Wallet Helpers
@@ -369,7 +385,6 @@ The SDK ships 35 focused utility modules alongside the core client:
 | `apireference.ts` | API reference index |
 | `wallet.ts` | Freighter v3 wallet helpers |
 | `utils.ts` | `parseAmount`, `formatAmount`, `deadlineFromDays`, etc. |
-| `errors.ts` | Typed error classes |
 | `retrylogic.ts` | Automatic retry for failed transactions |
 | `batchoperations.ts` | Batch operation helpers |
 | `eventlisteners.ts` | Contract event listener utilities |
@@ -399,7 +414,7 @@ The SDK ships 35 focused utility modules alongside the core client:
 
 | stellar-sdk | Protocol | Status |
 |-------------|----------|--------|
-| 16.0.1 | 27 | ✅ Current |
+| 16.0.1 | 27 | Current |
 
 ---
 
@@ -423,26 +438,3 @@ See [SECURITY.md](SECURITY.md) for the vulnerability disclosure process.
 ## License
 
 [MIT](LICENSE)
-
-## Invoice Tags SDK
-
-- `getInvoiceTags(invoiceId)` — fetch tags
-- `setInvoiceTags(caller, invoiceId, tags)` — set tags
-
-- `sdk-memo-ext` — feat(sdk): memo ext — get/setInvoiceMemoExt
-
-- `sdk-batch-refund` — feat(sdk): batch refund — refundBatch
-
-- `sdk-extend-deadline` — feat(sdk): extend deadline — extendDeadline
-
-- `feat/sdk-metadata` — feat(sdk): metadata — get/setInvoiceMetadata
-
-- `feat/sdk-discount` — feat(sdk): discount — get/setDiscount
-
-- `feat/sdk-recurring-pause` — feat(sdk): recurring pause — pause/resume
-
-- `feat/sdk-template` — feat(sdk): template — create/getTemplate
-
-- `feat/sdk-approval` — feat(sdk): approval — set/approve/getApproval
-
-- `feat/sdk-archival` — feat(sdk): archival — archive/isArchived/unarchive
