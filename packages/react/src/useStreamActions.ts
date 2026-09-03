@@ -103,3 +103,83 @@ export function useWithdrawVested(
 
   return { withdraw, loading, error, txHash };
 }
+
+/**
+ * Mutation hook for `SharpyClient.cancelStream`.
+ */
+export function useCancelStream(
+  client: SharpyClient,
+  opts: StreamActionOptions = {}
+): {
+  cancel: (caller: string, streamId: number) => Promise<{ txHash: string }>;
+  loading: boolean;
+  error: Error | null;
+  txHash: string | null;
+} {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+  const [txHash, setTxHash] = useState<string | null>(null);
+
+  const cancel = useCallback(
+    async (caller: string, streamId: number) => {
+      setLoading(true);
+      setError(null);
+      try {
+        const result = await client.cancelStream(caller, streamId);
+        setTxHash(result.txHash);
+        opts.onSuccess?.(result.txHash);
+        return result;
+      } catch (e) {
+        const err = e instanceof Error ? e : new Error(String(e));
+        setError(err);
+        opts.onError?.(err);
+        throw err;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [client, opts.onSuccess, opts.onError]
+  );
+
+  return { cancel, loading, error, txHash };
+}
+
+/**
+ * Mutation hook for `SharpyClient.topUpStream`.
+ */
+export function useTopUpStream(
+  client: SharpyClient,
+  opts: StreamActionOptions = {}
+): {
+  topUp: (caller: string, streamId: number, amount: bigint) => Promise<{ txHash: string }>;
+  loading: boolean;
+  error: Error | null;
+  txHash: string | null;
+} {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+  const [txHash, setTxHash] = useState<string | null>(null);
+
+  const topUp = useCallback(
+    async (caller: string, streamId: number, amount: bigint) => {
+      setLoading(true);
+      setError(null);
+      try {
+        const result = await client.topUpStream(caller, streamId, amount);
+        setTxHash(result.txHash);
+        opts.onSuccess?.(result.txHash);
+        return result;
+      } catch (e) {
+        const err = e instanceof Error ? e : new Error(String(e));
+        setError(err);
+        opts.onError?.(err);
+        throw err;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [client, opts.onSuccess, opts.onError]
+  );
+
+  return { topUp, loading, error, txHash };
+}
