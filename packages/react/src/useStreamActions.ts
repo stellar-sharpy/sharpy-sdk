@@ -2,6 +2,24 @@ import { useCallback, useState } from "react";
 import type { SharpyClient, CreateStreamParams } from "@stellar-sharpy/sdk";
 
 /**
+ * @module useStreamActions — React mutation hooks for token streams.
+ *
+ * Wraps `SharpyClient.createStream/withdrawVested/cancelStream/topUpStream`
+ * with loading/error/txHash state and optional onSuccess/onError callbacks.
+ *
+ * @example
+ * ```tsx
+ * const client = new SharpyClient({ ...NETWORKS.testnet, signTransaction });
+ * const { create, loading } = useCreateStream(client);
+ * const { withdraw } = useWithdrawVested(client);
+ * const { cancel } = useCancelStream(client);
+ * const { topUp } = useTopUpStream(client);
+ *
+ * await create({ creator, recipient, token, totalAmount: 1000n, startAt, endAt });
+ * ```
+ */
+
+/**
  * Shared mutation state for streaming actions.
  */
 export interface StreamActionOptions {
