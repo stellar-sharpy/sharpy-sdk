@@ -285,6 +285,10 @@ import {
   DeadlinePassedError,
   InvoiceNotPendingError,
   OverpaymentError,
+  StreamingNotFoundError,
+  StreamingInvalidArgsError,
+  StreamingPausedError,
+  StreamingNotInitializedError,
 } from "@stellar-sharpy/sdk";
 
 try {
@@ -294,6 +298,18 @@ try {
     console.error("Invoice deadline has passed");
   } else if (e instanceof OverpaymentError) {
     console.error("Payment exceeds remaining balance");
+  }
+}
+
+try {
+  await client.withdrawVested(publicKey, streamId);
+} catch (e) {
+  if (e instanceof StreamingNotFoundError) {
+    console.error("Stream does not exist");
+  } else if (e instanceof StreamingPausedError) {
+    console.error("Stream is paused");
+  } else if (e instanceof StreamingInvalidArgsError) {
+    console.error("Bad streaming args");
   }
 }
 ```
