@@ -215,6 +215,12 @@ const { complete } = useCompleteCctpInbound(client);
 await complete(caller, att.message, att.attestation);
 ```
 
+##### CCTP end-to-end (EVM → Stellar)
+
+1. Build `hookData` with `client.buildCctpHookData(forwardRecipient)` and pass it to the EVM `depositForBurnWithHook` call (mintRecipient = destinationCaller = CctpForwarder).
+2. Wait for Circle attestation with `pollCctpAttestation(evmTxHash, sourceDomain)` or `useCctpAttestation`.
+3. Complete on Stellar with `completeCctpInbound(caller, message, attestation)` or `useCompleteCctpInbound`.
+
 #### React Invoice Hooks (`@stellar-sharpy/react`)
 
 ```tsx
