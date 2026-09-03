@@ -143,7 +143,10 @@ export function useInvoicesByCreator(
   const [error, setError] = useState<Error | null>(null);
 
   const fetchIds = useCallback(async () => {
-    if (!creator || !enabled) return;
+    if (!creator || !enabled) {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
@@ -159,7 +162,10 @@ export function useInvoicesByCreator(
         setTotal(data.length);
       }
     } catch (e) {
-      setError(e instanceof Error ? e : new Error(String(e)));
+      const err = e instanceof Error ? e : new Error(String(e));
+      setError(err);
+      setIds([]);
+      setTotal(null);
     } finally {
       setLoading(false);
     }
