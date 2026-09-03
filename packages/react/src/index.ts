@@ -49,12 +49,15 @@ export interface UseInvoiceResult {
  * Fetches an invoice by ID and optionally auto-refreshes.
  *
  * Uses `SharpyClient.getInvoice` internally (read-only simulation via
- * `READ_ONLY_ACCOUNT`).
+ * `READ_ONLY_ACCOUNT`). Tracks `invoiceId` in the result, clears stale
+ * data on id change when `refreshOnIdChange` is true, and normalizes
+ * loading/error transitions for null ids.
  *
  * @param client Configured SharpyClient
  * @param id Invoice ID
  * @param opts.refreshInterval Poll interval in ms (0 disables)
  * @param opts.enabled When false, skips fetching (default true)
+ * @param opts.refreshOnIdChange When true, clears stale invoice on id change (default true)
  */
 export function useInvoice(
   client: SharpyClient,
