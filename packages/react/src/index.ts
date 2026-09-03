@@ -31,12 +31,16 @@ export interface UseInvoiceOptions {
   refreshInterval?: number;
   /** Whether to fetch on mount (default: true) */
   enabled?: boolean;
+  /** When true (default), clears stale invoice when id changes */
+  refreshOnIdChange?: boolean;
 }
 
 export interface UseInvoiceResult {
   invoice: Invoice | null;
   loading: boolean;
   error: Error | null;
+  /** Currently tracked invoice ID (mirrors the `id` arg) */
+  invoiceId: number | null;
   /** Manually re-fetch */
   refresh: () => Promise<void>;
 }
@@ -45,25 +49,32 @@ export interface UseInvoiceResult {
  * Fetches an invoice by ID and optionally auto-refreshes.
  *
  * Uses `SharpyClient.getInvoice` internally (read-only simulation via
- * `READ_ONLY_ACCOUNT`).
+ * `READ_ONLY_ACCOUNT`). Tracks `invoiceId` in the result, clears stale
+ * data on id change when `refreshOnIdChange` is true, and normalizes
+ * loading/error transitions for null ids.
  *
  * @param client Configured SharpyClient
  * @param id Invoice ID
  * @param opts.refreshInterval Poll interval in ms (0 disables)
  * @param opts.enabled When false, skips fetching (default true)
+ * @param opts.refreshOnIdChange When true, clears stale invoice on id change (default true)
  */
 export function useInvoice(
   client: SharpyClient,
   id: number | null | undefined,
   opts: UseInvoiceOptions = {}
 ): UseInvoiceResult {
-  const { refreshInterval, enabled = true } = opts;
+  const { refreshInterval, enabled = true, refreshOnIdChange = true } = opts;
   const [invoice, setInvoice] = useState<Invoice | null>(null);
   const [loading, setLoading] = useState<boolean>(enabled && id != null);
   const [error, setError] = useState<Error | null>(null);
 
   const fetchInvoice = useCallback(async () => {
-    if (id == null || !enabled) return;
+    if (id == null || !enabled) {
+      if (refreshOnIdChange) setInvoice(null);
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
@@ -71,10 +82,11 @@ export function useInvoice(
       setInvoice(data);
     } catch (e) {
       setError(e instanceof Error ? e : new Error(String(e)));
+      if (refreshOnIdChange) setInvoice(null);
     } finally {
       setLoading(false);
     }
-  }, [client, id, enabled]);
+  }, [client, id, enabled, refreshOnIdChange]);
 
   useEffect(() => {
     void fetchInvoice();
@@ -86,7 +98,7 @@ export function useInvoice(
     return () => clearInterval(timer);
   }, [fetchInvoice, refreshInterval, id, enabled]);
 
-  return { invoice, loading, error, refresh: fetchInvoice };
+  return { invoice, loading, error, invoiceId: id ?? null, refresh: fetchInvoice };
 }
 
 // ---------------------------------------------------------------------------
@@ -96,6 +108,8 @@ export interface UseInvoicesByCreatorOptions {
   limit?: number;
   offset?: number;
   enabled?: boolean;
+  /** Poll interval in ms; 0 or undefined disables auto-refresh */
+  refreshInterval?: number;
 }
 
 export interface UseInvoicesByCreatorResult {
@@ -103,6 +117,8 @@ export interface UseInvoicesByCreatorResult {
   total: number | null;
   loading: boolean;
   error: Error | null;
+  /** Echo of the creator arg for tracking */
+  creator: string | null;
   refresh: () => Promise<void>;
 }
 
@@ -123,14 +139,17 @@ export function useInvoicesByCreator(
   creator: string | null | undefined,
   opts: UseInvoicesByCreatorOptions = {}
 ): UseInvoicesByCreatorResult {
-  const { limit, offset, enabled = true } = opts;
+  const { limit, offset, enabled = true, refreshInterval } = opts;
   const [ids, setIds] = useState<number[]>([]);
   const [total, setTotal] = useState<number | null>(null);
   const [loading, setLoading] = useState<boolean>(enabled && !!creator);
   const [error, setError] = useState<Error | null>(null);
 
   const fetchIds = useCallback(async () => {
-    if (!creator || !enabled) return;
+    if (!creator || !enabled) {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
@@ -146,7 +165,10 @@ export function useInvoicesByCreator(
         setTotal(data.length);
       }
     } catch (e) {
-      setError(e instanceof Error ? e : new Error(String(e)));
+      const err = e instanceof Error ? e : new Error(String(e));
+      setError(err);
+      setIds([]);
+      setTotal(null);
     } finally {
       setLoading(false);
     }
@@ -156,7 +178,13 @@ export function useInvoicesByCreator(
     void fetchIds();
   }, [fetchIds]);
 
-  return { ids, total, loading, error, refresh: fetchIds };
+  useEffect(() => {
+    if (!refreshInterval || !creator || !enabled) return;
+    const timer = setInterval(() => void fetchIds(), refreshInterval);
+    return () => clearInterval(timer);
+  }, [fetchIds, refreshInterval, creator, enabled]);
+
+  return { ids, total, loading, error, creator: creator ?? null, refresh: fetchIds };
 }
 
 // ---------------------------------------------------------------------------
