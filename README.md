@@ -86,6 +86,16 @@ await client.pay(publicKey, invoiceId, parseAmount("1000"));
 // Fetch status
 const invoice = await client.getInvoice(invoiceId);
 console.log(invoice.status); // "Released"
+
+// Create a vesting stream — 1000 USDC over 30 days
+const { streamId } = await client.createStream({
+  creator: publicKey,
+  recipient: "GDEF...RECIPIENT",
+  token: "USDC_CONTRACT_ADDRESS",
+  totalAmount: parseAmount("1000"),
+  startAt: Math.floor(Date.now() / 1000),
+  endAt: deadlineFromDays(30),
+});
 ```
 
 ---
