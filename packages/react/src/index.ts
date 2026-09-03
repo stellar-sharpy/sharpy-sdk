@@ -282,3 +282,6 @@ export function useWallet(opts: UseWalletOptions = {}): UseWalletResult {
 
   return { publicKey, connecting, error, connect, disconnect };
 }
+
+export { useStreaming } from "./useStreaming";
+}
