@@ -991,34 +991,32 @@ export class SharpyClient {
   /**
    * Paginated wrapper for getInvoicesByCreator. Fetches all IDs then slices client-side.
    * For large creators, use limit/offset to page through results efficiently.
+   * Bounds are normalized (`normalizePageOpts`); `hasMore` signals further pages.
    * @param creator Creator address
-   * @param opts.limit Max results to return (default: all)
+   * @param opts.limit Max results to return (default: all, capped at 100 per page)
    * @param opts.offset Offset into result set (default: 0)
    */
   async getInvoicesByCreatorPaginated(
     creator: string,
     opts?: { limit?: number; offset?: number }
-  ): Promise<{ ids: number[]; total: number }> {
+  ): Promise<{ ids: number[]; total: number; offset: number; limit: number; hasMore: boolean }> {
     const all = await this.getInvoicesByCreator(creator);
-    const offset = opts?.offset ?? 0;
-    const limit = opts?.limit ?? all.length;
-    return { ids: all.slice(offset, offset + limit), total: all.length };
+    return paginateIds(all, opts);
   }
 
   /**
    * Paginated wrapper for getInvoicesByPayer. Fetches all IDs then slices client-side.
+   * Bounds are normalized (`normalizePageOpts`); `hasMore` signals further pages.
    * @param payer Payer address
-   * @param opts.limit Max results to return (default: all)
+   * @param opts.limit Max results to return (default: all, capped at 100 per page)
    * @param opts.offset Offset into result set (default: 0)
    */
   async getInvoicesByPayerPaginated(
     payer: string,
     opts?: { limit?: number; offset?: number }
-  ): Promise<{ ids: number[]; total: number }> {
+  ): Promise<{ ids: number[]; total: number; offset: number; limit: number; hasMore: boolean }> {
     const all = await this.getInvoicesByPayer(payer);
-    const offset = opts?.offset ?? 0;
-    const limit = opts?.limit ?? all.length;
-    return { ids: all.slice(offset, offset + limit), total: all.length };
+    return paginateIds(all, opts);
   }
 
   /**
