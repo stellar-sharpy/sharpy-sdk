@@ -33,7 +33,7 @@
     "build": "tsup",
     "prepare": "tsup",
     "dev": "tsup --watch",
-    "test": "vitest run test/client.test.ts",
+    "test": "vitest run test/unit",
     "test:e2e": "vitest run test/e2e",
     "test:watch": "vitest",
     "lint": "tsc --noEmit"
