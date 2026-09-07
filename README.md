@@ -200,12 +200,17 @@ await client.cancelStream(publicKey, streamId); // cancelStream(caller, streamId
 #### React Streaming Hooks (`@stellar-sharpy/react`)
 
 ```tsx
-import { useCreateStream, useWithdrawVested, useCancelStream, useTopUpStream } from "@stellar-sharpy/react";
+import { useStreaming, useCreateStream, useWithdrawVested, useCancelStream, useTopUpStream } from "@stellar-sharpy/react";
 
 const { create, loading, data } = useCreateStream(client);
 const { withdraw } = useWithdrawVested(client);
 const { cancel } = useCancelStream(client);
 const { topUp } = useTopUpStream(client);
+
+// Polling view for a stream-backed invoice
+const { isStreaming, vestedAmount, loading: streamLoading } = useStreaming(client, invoiceId, {
+  refreshInterval: 10_000,
+});
 ```
 
 #### React CCTP Hooks (`@stellar-sharpy/react`)
@@ -215,8 +220,8 @@ import { useCctpHookData, useCctpAttestation, useCompleteCctpInbound } from "@st
 
 const { build } = useCctpHookData(client);
 const hookData = build("GDEF...FORWARD_RECIPIENT");
-const { poll, data: att } = useCctpAttestation(client);
-await poll(evmTxHash, 6); // Base domain
+const { poll, data: att, status } = useCctpAttestation(client);
+await poll(evmTxHash, 6); // Base domain, status transitions idle to polling to ready
 const { complete } = useCompleteCctpInbound(client);
 await complete(caller, att.message, att.attestation);
 ```
