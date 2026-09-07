@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.3.0] - 2026-09-07
+
+### Added
+- `createStream/withdrawVested/cancelStream/topUpStream` — linear-vesting token streams with cliff and cancelable flag
+- `buildCctpHookData/pollCctpAttestation/completeCctpInbound` — CCTP EVM to Stellar inbound flow
+- `useCreateStream/useWithdrawVested/useCancelStream/useTopUpStream` — React mutation hooks for streams
+- `useCctpHookData/useCctpAttestation/useCompleteCctpInbound` — React hooks for CCTP inbound flows
+- `useInvoice` invoiceId tracking + refreshOnIdChange; `useInvoicesByCreator` creator/total + polling
+- Testnet contract `CAEWQX36RLGP2WY6ACOREDJEIGELYV3HWWUPGV3CJMC27OWGQWZHTH6T` pre-configured via `NETWORKS.testnet`
+
+### Changed
+- Bump `@stellar-sharpy/sdk` 0.2.0 to 0.3.0 and `@stellar-sharpy/react` to 0.3.0 for aligned release
+- Publish config reviewed: ESM + CJS + DTS via tsup, `files` includes dist/README/LICENSE/CHANGELOG, `publishConfig` public
+
 ## [Unreleased]
 - feat(react): invoice hooks — useInvoice invoiceId tracking + refreshOnIdChange, useInvoicesByCreator creator/total/pagination
 - feat(react): CCTP hooks — useCctpHookData/useCctpAttestation/useCompleteCctpInbound
