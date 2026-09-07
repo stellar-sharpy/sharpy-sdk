@@ -1,5 +1,8 @@
 # Changelog
 
+## [Unreleased]
+- Typed error mapping for 0.3.0 modules — `DeadlineNotReachedError`, `PayerNotWhitelistedError`, `InvoiceFrozenError`, `InvoiceNotArchivableError`, `TrancheCapExceededError`, `BpsOutOfRangeError`, `RouteCycleError`, `NotApproverError`; `mapContractError` now covers all `only creator can` guards and fixes `deadline has not passed` mis-typing — feat/sdk-error-mapping (closes #124)
+
 ## [0.3.0] - 2026-09-07
 
 ### Added
