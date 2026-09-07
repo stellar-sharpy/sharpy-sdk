@@ -166,7 +166,8 @@ export interface Invoice {
   arbitrator?: string | null; // Escrow arbitrator address
 }
 
-function mapContractError(message: string, invoiceId?: number): Error {
+/** Map a raw contract panic string to a typed SDK error. Exported for unit tests. */
+export function mapContractError(message: string, invoiceId?: number): Error {
   const id = invoiceId ?? 0;
   const m = message.toLowerCase();
   // "deadline has not passed" (early refund/dispute) must win over the
