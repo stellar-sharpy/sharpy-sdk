@@ -22,7 +22,7 @@ export type {
   StreamInfo,
   TopUpStreamParams,
 } from "./client.js";
-export { InvoiceNotFoundError, DeadlinePassedError, InvoiceNotPendingError, OverpaymentError, CallerNotCreatorError, StreamingNotFoundError, StreamingInvalidArgsError, StreamingPausedError, StreamingNotInitializedError } from "./errors.js";
+export { InvoiceNotFoundError, DeadlinePassedError, InvoiceNotPendingError, OverpaymentError, CallerNotCreatorError, StreamingNotFoundError, StreamingInvalidArgsError, StreamingPausedError, StreamingNotInitializedError, DeadlineNotReachedError, PayerNotWhitelistedError, InvoiceFrozenError, InvoiceNotArchivableError, TrancheCapExceededError, BpsOutOfRangeError, RouteCycleError, NotApproverError } from "./errors.js";
 export { connectWallet, getWalletPublicKey, signTransaction } from "./wallet.js";
 export { parseAmount, formatAmount, deadlineFromDays, isExpired, isValidAddress, truncateAddress, explorerUrl } from "./utils.js";
 
