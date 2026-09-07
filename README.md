@@ -178,14 +178,18 @@ new SharpyClient(config: SharpyClientConfig)
 | `topUpStream(caller, streamId, amount)` | `Promise<{ txHash }>` | Add funds to an existing stream |
 
 ```typescript
-const { streamId } = await client.createStream({
+// createStream end-to-end — CreateStreamParams with cliff and cancelable flag
+const { streamId, txHash } = await client.createStream({
   creator: publicKey,
   recipient: "GDEF...RECIPIENT",
   token: "USDC_CONTRACT_ADDRESS",
   totalAmount: parseAmount("1000"),
   startAt: Math.floor(Date.now() / 1000),
   endAt: deadlineFromDays(30),
+  cliffAt: Math.floor(Date.now() / 1000) + 7 * 24 * 3600,
+  cancelable: true,
 });
+console.log(`Stream #${streamId} created: ${txHash}`);
 await client.withdrawVested(publicKey, streamId);
 await client.topUpStream(publicKey, streamId, parseAmount("100"));
 await client.cancelStream(publicKey, streamId);
