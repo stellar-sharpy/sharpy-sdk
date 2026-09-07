@@ -178,6 +178,10 @@ function mapContractError(message: string, invoiceId?: number): Error {
   // All creator-only guards (cancel, notes, tags, memo, metadata, discount,
   // pause/resume, approvers, archive/unarchive, extend, whitelist, tranche).
   if (m.includes("only creator can")) return new CallerNotCreatorError(id);
+  if (m.includes("no stream")) return new StreamingNotFoundError(id);
+  if (m.includes("not whitelisted")) return new PayerNotWhitelistedError(id);
+  if (m.includes("is frozen") || m.includes("already frozen")) return new InvoiceFrozenError(id);
+  if (m.includes("only terminal invoices can be archived")) return new InvoiceNotArchivableError(id);
   return new Error(message);
 }
 
