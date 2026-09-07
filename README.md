@@ -178,28 +178,39 @@ new SharpyClient(config: SharpyClientConfig)
 | `topUpStream(caller, streamId, amount)` | `Promise<{ txHash }>` | Add funds to an existing stream |
 
 ```typescript
-const { streamId } = await client.createStream({
+// createStream end-to-end — CreateStreamParams with cliff and cancelable flag
+const { streamId, txHash } = await client.createStream({
   creator: publicKey,
   recipient: "GDEF...RECIPIENT",
   token: "USDC_CONTRACT_ADDRESS",
   totalAmount: parseAmount("1000"),
   startAt: Math.floor(Date.now() / 1000),
   endAt: deadlineFromDays(30),
+  cliffAt: Math.floor(Date.now() / 1000) + 7 * 24 * 3600,
+  cancelable: true,
 });
-await client.withdrawVested(publicKey, streamId);
-await client.topUpStream(publicKey, streamId, parseAmount("100"));
-await client.cancelStream(publicKey, streamId);
+console.log(`Stream #${streamId} created: ${txHash}`);
+
+// Streaming lifecycle — withdraw vested, top up, cancel
+await client.withdrawVested(publicKey, streamId); // withdrawVested(caller, streamId)
+await client.topUpStream(publicKey, streamId, parseAmount("100")); // topUpStream(caller, streamId, amount)
+await client.cancelStream(publicKey, streamId); // cancelStream(caller, streamId)
 ```
 
 #### React Streaming Hooks (`@stellar-sharpy/react`)
 
 ```tsx
-import { useCreateStream, useWithdrawVested, useCancelStream, useTopUpStream } from "@stellar-sharpy/react";
+import { useStreaming, useCreateStream, useWithdrawVested, useCancelStream, useTopUpStream } from "@stellar-sharpy/react";
 
 const { create, loading, data } = useCreateStream(client);
 const { withdraw } = useWithdrawVested(client);
 const { cancel } = useCancelStream(client);
 const { topUp } = useTopUpStream(client);
+
+// Polling view for a stream-backed invoice
+const { isStreaming, vestedAmount, loading: streamLoading } = useStreaming(client, invoiceId, {
+  refreshInterval: 10_000,
+});
 ```
 
 #### React CCTP Hooks (`@stellar-sharpy/react`)
@@ -209,8 +220,8 @@ import { useCctpHookData, useCctpAttestation, useCompleteCctpInbound } from "@st
 
 const { build } = useCctpHookData(client);
 const hookData = build("GDEF...FORWARD_RECIPIENT");
-const { poll, data: att } = useCctpAttestation(client);
-await poll(evmTxHash, 6); // Base domain
+const { poll, data: att, status } = useCctpAttestation(client);
+await poll(evmTxHash, 6); // Base domain, status transitions idle to polling to ready
 const { complete } = useCompleteCctpInbound(client);
 await complete(caller, att.message, att.attestation);
 ```
@@ -220,6 +231,14 @@ await complete(caller, att.message, att.attestation);
 1. Build `hookData` with `client.buildCctpHookData(forwardRecipient)` and pass it to the EVM `depositForBurnWithHook` call (mintRecipient = destinationCaller = CctpForwarder).
 2. Wait for Circle attestation with `pollCctpAttestation(evmTxHash, sourceDomain)` or `useCctpAttestation`.
 3. Complete on Stellar with `completeCctpInbound(caller, message, attestation)` or `useCompleteCctpInbound`.
+
+```typescript
+// CCTP end-to-end — EVM Base to Stellar testnet
+const hookData = client.buildCctpHookData("GDEF...FORWARD_RECIPIENT");
+// pass hookData to EVM depositForBurnWithHook (mintRecipient = destinationCaller = CctpForwarder)
+const { message, attestation } = await client.pollCctpAttestation(evmTxHash, 6); // 6 = Base domain
+const { txHash: cctpTxHash } = await client.completeCctpInbound(caller, message, attestation);
+```
 
 #### React Invoice Hooks (`@stellar-sharpy/react`)
 
@@ -282,6 +301,7 @@ const { ids, total, creator, loading: listLoading } = useInvoicesByCreator(clien
 import { NETWORKS } from "@stellar-sharpy/sdk";
 
 // Testnet — pre-configured with deployed contract ID
+// CAEWQX36RLGP2WY6ACOREDJEIGELYV3HWWUPGV3CJMC27OWGQWZHTH6T
 const client = new SharpyClient(NETWORKS.testnet);
 // { rpcUrl, networkPassphrase, contractId }
 
@@ -366,7 +386,7 @@ interface AuditEntry {
 ## Build & Development
 
 ```bash
-npm run build    # tsup — ESM + CJS + TypeScript declarations
+npm run build    # tsup — ESM + CJS + TypeScript declarations (verified green for 0.3.0)
 npm run dev      # watch mode
 npm run lint     # tsc --noEmit
 npm test         # vitest

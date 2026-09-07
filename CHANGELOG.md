@@ -9,6 +9,7 @@
 - `useCctpHookData/useCctpAttestation/useCompleteCctpInbound` — React hooks for CCTP inbound flows
 - `useInvoice` invoiceId tracking + refreshOnIdChange; `useInvoicesByCreator` creator/total + polling
 - Testnet contract `CAEWQX36RLGP2WY6ACOREDJEIGELYV3HWWUPGV3CJMC27OWGQWZHTH6T` pre-configured via `NETWORKS.testnet`
+- Docs — copy-paste streaming lifecycle and CCTP end-to-end examples verified against `SharpyClient` signatures
 
 ### Changed
 - Bump `@stellar-sharpy/sdk` 0.2.0 to 0.3.0 and `@stellar-sharpy/react` to 0.3.0 for aligned release
