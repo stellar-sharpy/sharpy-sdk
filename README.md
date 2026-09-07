@@ -100,6 +100,11 @@ const { streamId } = await client.createStream({
 
 ---
 
+## Examples
+
+Runnable copy-paste snippets in [`examples/`](examples/) (typechecked via `npm run examples:typecheck`):
+create-and-pay, stream-lifecycle, CCTP inbound end-to-end, paginated dashboard scan.
+
 ## API Reference
 
 ### `SharpyClient`

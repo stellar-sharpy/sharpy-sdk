@@ -35,6 +35,7 @@
     "dev": "tsup --watch",
     "test": "vitest run test/unit",
     "test:e2e": "vitest run test/e2e",
+    "examples:typecheck": "tsc --noEmit --strict --skipLibCheck --module esnext --moduleResolution bundler --target es2020 --lib es2020,dom --types node examples/*.ts",
     "test:watch": "vitest",
     "lint": "tsc --noEmit"
   },
