@@ -64,3 +64,64 @@ export class StreamingNotInitializedError extends Error {
     this.name = "StreamingNotInitializedError";
   }
 }
+
+/**
+ * Typed errors for the 0.3.0 modules (whitelist, tranche, fee, archival,
+ * routing, approval). Thrown by `mapContractError` in client.ts — catch
+ * these instead of parsing raw contract messages.
+ */
+export class DeadlineNotReachedError extends Error {
+  constructor(invoiceId: number) {
+    super(`Invoice #${invoiceId} deadline has not passed yet (refund/dispute too early)`);
+    this.name = "DeadlineNotReachedError";
+  }
+}
+
+export class PayerNotWhitelistedError extends Error {
+  constructor(invoiceId: number) {
+    super(`Payer is not whitelisted for invoice #${invoiceId}`);
+    this.name = "PayerNotWhitelistedError";
+  }
+}
+
+export class InvoiceFrozenError extends Error {
+  constructor(invoiceId: number) {
+    super(`Invoice #${invoiceId} is frozen`);
+    this.name = "InvoiceFrozenError";
+  }
+}
+
+export class InvoiceNotArchivableError extends Error {
+  constructor(invoiceId: number) {
+    super(`Only terminal invoices can be archived (invoice #${invoiceId} is still pending)`);
+    this.name = "InvoiceNotArchivableError";
+  }
+}
+
+export class TrancheCapExceededError extends Error {
+  constructor(invoiceId: number) {
+    super(`Tranche releases exceed 100% for invoice #${invoiceId}`);
+    this.name = "TrancheCapExceededError";
+  }
+}
+
+export class BpsOutOfRangeError extends Error {
+  constructor(detail: string) {
+    super(`Basis points out of range: ${detail}`);
+    this.name = "BpsOutOfRangeError";
+  }
+}
+
+export class RouteCycleError extends Error {
+  constructor(invoiceId: number) {
+    super(`Composable route cycle detected at invoice #${invoiceId}`);
+    this.name = "RouteCycleError";
+  }
+}
+
+export class NotApproverError extends Error {
+  constructor(invoiceId: number) {
+    super(`Caller is not an approver for invoice #${invoiceId}`);
+    this.name = "NotApproverError";
+  }
+}
