@@ -26,11 +26,12 @@ async function main(): Promise<void> {
   console.log(`hook data for the EVM burn: ${hookData}`);
   console.log("...perform the EVM burn with the hook data, then polling attestation...");
 
-  const { message, attestation } = await client.pollCctpAttestation(SOURCE_TX_HASH, SOURCE_DOMAIN, {
+  const { message, attestation, attempts, elapsedMs } = await client.pollCctpAttestation(SOURCE_TX_HASH, SOURCE_DOMAIN, {
     intervalMs: 5_000,
     maxAttempts: 60,
+    onAttempt: (attempt, max) => console.log(`poll ${attempt}/${max}...`),
   });
-  console.log(`attestation ready (message ${message.length} chars)`);
+  console.log(`attestation ready after ${attempts} polls (${elapsedMs}ms)`);
 
   const done = await client.completeCctpInbound(CALLER, message, attestation);
   console.log(`inbound complete: ${done.txHash}`);

@@ -15,6 +15,8 @@
  * Pagination: `normalizePageOpts/paginateIds/MAX_PAGE_SIZE` + `getInvoicesByCreatorPaginated/` +
  *   `getInvoicesByPayerPaginated` (`{ids,total,offset,limit,hasMore}`) + `iterateInvoicesByCreator/` +
  *   `iterateInvoicesByPayer` async generators; negative/NaN/fractional input is clamped.
+ * CCTP: `pollCctpAttestation` returns `{message, attestation, attempts, elapsedMs}` and accepts
+ *   `onAttempt(attempt, maxAttempts)` for progress UI; timeouts report actual elapsed ms.
  */
 
 export function apireferenceHelper(input: unknown): unknown {
