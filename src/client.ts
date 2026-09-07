@@ -995,6 +995,17 @@ export class SharpyClient {
    * @param creator Creator address
    * @param opts.limit Max results to return (default: all, capped at 100 per page)
    * @param opts.offset Offset into result set (default: 0)
+   * @example
+   * ```ts
+   * const first = await client.getInvoicesByCreatorPaginated(creator, { limit: 10 });
+   * if (first.hasMore) {
+   *   const second = await client.getInvoicesByCreatorPaginated(creator, { limit: 10, offset: 10 });
+   * }
+   * // Or stream all pages:
+   * for await (const page of client.iterateInvoicesByCreator(creator, { pageSize: 25 })) {
+   *   render(page.ids);
+   * }
+   * ```
    */
   async getInvoicesByCreatorPaginated(
     creator: string,
