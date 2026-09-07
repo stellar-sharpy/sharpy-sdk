@@ -12,6 +12,9 @@
  *   `RouteCycleError` ("route cycle detected"/"cannot route to self"), `NotApproverError`.
  *   `mapContractError` order: "has not passed" > "not found" > "deadline" > "not pending" >
  *   tranche/bps caps > overpayment > "only creator can" > stream/whitelist/frozen/archival > route/approver.
+ * Pagination: `normalizePageOpts/paginateIds/MAX_PAGE_SIZE` + `getInvoicesByCreatorPaginated/` +
+ *   `getInvoicesByPayerPaginated` (`{ids,total,offset,limit,hasMore}`) + `iterateInvoicesByCreator/` +
+ *   `iterateInvoicesByPayer` async generators; negative/NaN/fractional input is clamped.
  */
 
 export function apireferenceHelper(input: unknown): unknown {

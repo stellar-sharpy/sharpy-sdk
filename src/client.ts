@@ -10,6 +10,7 @@ import {
 } from "@stellar/stellar-sdk";
 import { Server } from "@stellar/stellar-sdk/rpc";
 import { CallerNotCreatorError, DeadlinePassedError, InvoiceNotFoundError, InvoiceNotPendingError, OverpaymentError, DeadlineNotReachedError, PayerNotWhitelistedError, InvoiceFrozenError, InvoiceNotArchivableError, TrancheCapExceededError, BpsOutOfRangeError, RouteCycleError, NotApproverError, StreamingNotFoundError } from "./errors.js";
+import { normalizePageOpts, paginateIds, MAX_PAGE_SIZE } from "./paginationhelpers.js";
 
 /**
  * Placeholder account used for read-only contract simulations.
@@ -892,8 +893,7 @@ export class SharpyClient {
     const raw = scValToNative((sim as any).result.retval) as any[];
     const ids = raw.map(Number);
     if (opts?.offset !== undefined || opts?.limit !== undefined) {
-      const offset = opts.offset ?? 0;
-      const limit = opts.limit ?? ids.length;
+      const { offset, limit } = normalizePageOpts(ids.length, opts);
       return ids.slice(offset, offset + limit);
     }
     return ids;
@@ -982,8 +982,7 @@ export class SharpyClient {
     const raw = scValToNative((sim as any).result.retval) as any[];
     const ids = raw.map(Number);
     if (opts?.offset !== undefined || opts?.limit !== undefined) {
-      const offset = opts.offset ?? 0;
-      const limit = opts.limit ?? ids.length;
+      const { offset, limit } = normalizePageOpts(ids.length, opts);
       return ids.slice(offset, offset + limit);
     }
     return ids;
@@ -992,34 +991,81 @@ export class SharpyClient {
   /**
    * Paginated wrapper for getInvoicesByCreator. Fetches all IDs then slices client-side.
    * For large creators, use limit/offset to page through results efficiently.
+   * Bounds are normalized (`normalizePageOpts`); `hasMore` signals further pages.
    * @param creator Creator address
-   * @param opts.limit Max results to return (default: all)
+   * @param opts.limit Max results to return (default: all, capped at 100 per page)
    * @param opts.offset Offset into result set (default: 0)
+   * @example
+   * ```ts
+   * const first = await client.getInvoicesByCreatorPaginated(creator, { limit: 10 });
+   * if (first.hasMore) {
+   *   const second = await client.getInvoicesByCreatorPaginated(creator, { limit: 10, offset: 10 });
+   * }
+   * // Or stream all pages:
+   * for await (const page of client.iterateInvoicesByCreator(creator, { pageSize: 25 })) {
+   *   render(page.ids);
+   * }
+   * ```
    */
   async getInvoicesByCreatorPaginated(
     creator: string,
     opts?: { limit?: number; offset?: number }
-  ): Promise<{ ids: number[]; total: number }> {
+  ): Promise<{ ids: number[]; total: number; offset: number; limit: number; hasMore: boolean }> {
     const all = await this.getInvoicesByCreator(creator);
-    const offset = opts?.offset ?? 0;
-    const limit = opts?.limit ?? all.length;
-    return { ids: all.slice(offset, offset + limit), total: all.length };
+    return paginateIds(all, opts);
   }
 
   /**
    * Paginated wrapper for getInvoicesByPayer. Fetches all IDs then slices client-side.
+   * Bounds are normalized (`normalizePageOpts`); `hasMore` signals further pages.
    * @param payer Payer address
-   * @param opts.limit Max results to return (default: all)
+   * @param opts.limit Max results to return (default: all, capped at 100 per page)
    * @param opts.offset Offset into result set (default: 0)
    */
   async getInvoicesByPayerPaginated(
     payer: string,
     opts?: { limit?: number; offset?: number }
-  ): Promise<{ ids: number[]; total: number }> {
+  ): Promise<{ ids: number[]; total: number; offset: number; limit: number; hasMore: boolean }> {
     const all = await this.getInvoicesByPayer(payer);
-    const offset = opts?.offset ?? 0;
-    const limit = opts?.limit ?? all.length;
-    return { ids: all.slice(offset, offset + limit), total: all.length };
+    return paginateIds(all, opts);
+  }
+
+  /**
+   * Yield creator invoice IDs page by page (`pageSize` per yield).
+   * Stops when `hasMore` is false — safe for large creator indexes.
+   */
+  async *iterateInvoicesByCreator(
+    creator: string,
+    opts?: { pageSize?: number }
+  ): AsyncGenerator<{ ids: number[]; total: number; offset: number; hasMore: boolean }> {
+    const pageSize = opts?.pageSize ?? MAX_PAGE_SIZE;
+    let offset = 0;
+    for (;;) {
+      const page = await this.getInvoicesByCreatorPaginated(creator, { limit: pageSize, offset });
+      yield { ids: page.ids, total: page.total, offset: page.offset, hasMore: page.hasMore };
+      if (!page.hasMore) return;
+      offset += page.ids.length;
+      if (page.ids.length === 0) return;
+    }
+  }
+
+  /**
+   * Yield payer invoice IDs page by page (`pageSize` per yield).
+   * Stops when `hasMore` is false — safe for large payer indexes.
+   */
+  async *iterateInvoicesByPayer(
+    payer: string,
+    opts?: { pageSize?: number }
+  ): AsyncGenerator<{ ids: number[]; total: number; offset: number; hasMore: boolean }> {
+    const pageSize = opts?.pageSize ?? MAX_PAGE_SIZE;
+    let offset = 0;
+    for (;;) {
+      const page = await this.getInvoicesByPayerPaginated(payer, { limit: pageSize, offset });
+      yield { ids: page.ids, total: page.total, offset: page.offset, hasMore: page.hasMore };
+      if (!page.hasMore) return;
+      offset += page.ids.length;
+      if (page.ids.length === 0) return;
+    }
   }
 
   /**
