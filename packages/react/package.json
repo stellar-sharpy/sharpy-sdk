@@ -1,6 +1,6 @@
 {
   "name": "@stellar-sharpy/react",
-  "version": "0.1.0",
+  "version": "0.3.0",
   "description": "React hooks for the Sharpy SDK — invoice fetching, creation, wallet and creator indexes",
   "license": "MIT",
   "type": "module",
