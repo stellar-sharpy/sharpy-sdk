@@ -9,7 +9,7 @@ import {
   xdr,
 } from "@stellar/stellar-sdk";
 import { Server } from "@stellar/stellar-sdk/rpc";
-import { CallerNotCreatorError, DeadlinePassedError, InvoiceNotFoundError, InvoiceNotPendingError, OverpaymentError } from "./errors.js";
+import { CallerNotCreatorError, DeadlinePassedError, InvoiceNotFoundError, InvoiceNotPendingError, OverpaymentError, DeadlineNotReachedError, PayerNotWhitelistedError, InvoiceFrozenError, InvoiceNotArchivableError, TrancheCapExceededError, BpsOutOfRangeError, RouteCycleError, NotApproverError, StreamingNotFoundError } from "./errors.js";
 
 /**
  * Placeholder account used for read-only contract simulations.
@@ -168,11 +168,26 @@ export interface Invoice {
 function mapContractError(message: string, invoiceId?: number): Error {
   const id = invoiceId ?? 0;
   const m = message.toLowerCase();
+  // "deadline has not passed" (early refund/dispute) must win over the
+  // generic "deadline has passed" rule below — checked first.
+  if (m.includes("has not passed")) return new DeadlineNotReachedError(id);
   if (m.includes("not found")) return new InvoiceNotFoundError(id);
   if (m.includes("deadline")) return new DeadlinePassedError(id);
   if (m.includes("not pending")) return new InvoiceNotPendingError(id);
+  // Cap violations are validation errors, not overpayments — checked before
+  // the generic overpayment rule so "tranches exceed 100%" isn't mis-typed.
+  if (m.includes("tranches exceed")) return new TrancheCapExceededError(id);
+  if (m.includes("bps out of range") || m.includes("exceed 100%") || m.includes("exceeds 100%") || m.includes("discount exceeds")) return new BpsOutOfRangeError(message);
   if (m.includes("overpayment") || m.includes("exceeds") || m.includes("remaining balance")) return new OverpaymentError(id);
-  if (m.includes("only creator can cancel")) return new CallerNotCreatorError(id);
+  // All creator-only guards (cancel, notes, tags, memo, metadata, discount,
+  // pause/resume, approvers, archive/unarchive, extend, whitelist, tranche).
+  if (m.includes("only creator can")) return new CallerNotCreatorError(id);
+  if (m.includes("no stream")) return new StreamingNotFoundError(id);
+  if (m.includes("not whitelisted")) return new PayerNotWhitelistedError(id);
+  if (m.includes("is frozen") || m.includes("already frozen")) return new InvoiceFrozenError(id);
+  if (m.includes("only terminal invoices can be archived")) return new InvoiceNotArchivableError(id);
+  if (m.includes("route cycle") || m.includes("cannot route to self")) return new RouteCycleError(id);
+  if (m.includes("not approver")) return new NotApproverError(id);
   return new Error(message);
 }
 
