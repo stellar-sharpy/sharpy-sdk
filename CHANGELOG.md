@@ -1,6 +1,7 @@
 # Changelog
 
 ## [Unreleased]
+- Copy-paste example snippets — `examples/` (create-and-pay, stream-lifecycle, CCTP inbound, paginated dashboard) with real client signatures, `examples:typecheck` script, README pointer — docs/sdk-examples (closes #121)
 - Unit tests for 0.3.0 methods — `test/unit` vitest suite (pagination bounds, error taxonomy, `mapContractError` routing table, multi-page walks); `mapContractError` exported for testability; `npm test` runs offline, `test:e2e` stays testnet-gated — test/sdk-030-coverage (closes #125)
 - Pagination wrappers for creator/payer indexes — `normalizePageOpts/paginateIds/MAX_PAGE_SIZE`, `{ids,total,offset,limit,hasMore}` page info on `getInvoicesByCreatorPaginated/getInvoicesByPayerPaginated`, `iterateInvoicesByCreator/iterateInvoicesByPayer` async generators; negative offsets can no longer wrap `slice` — feat/sdk-pagination (closes #122)
 - Typed error mapping for 0.3.0 modules — `DeadlineNotReachedError`, `PayerNotWhitelistedError`, `InvoiceFrozenError`, `InvoiceNotArchivableError`, `TrancheCapExceededError`, `BpsOutOfRangeError`, `RouteCycleError`, `NotApproverError`; `mapContractError` now covers all `only creator can` guards and fixes `deadline has not passed` mis-typing — feat/sdk-error-mapping (closes #124)
