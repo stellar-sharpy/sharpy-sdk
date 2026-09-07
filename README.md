@@ -389,7 +389,8 @@ interface AuditEntry {
 npm run build    # tsup — ESM + CJS + TypeScript declarations (verified green for 0.3.0)
 npm run dev      # watch mode
 npm run lint     # tsc --noEmit
-npm test         # vitest
+npm test         # vitest run test/unit — pagination bounds, error taxonomy, mapContractError table (no network)
+npm run test:e2e # vitest run test/e2e — testnet contract CAEWQX36 (requires RPC access)
 ```
 
 ---
