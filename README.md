@@ -227,6 +227,14 @@ await complete(caller, att.message, att.attestation);
 2. Wait for Circle attestation with `pollCctpAttestation(evmTxHash, sourceDomain)` or `useCctpAttestation`.
 3. Complete on Stellar with `completeCctpInbound(caller, message, attestation)` or `useCompleteCctpInbound`.
 
+```typescript
+// CCTP end-to-end — EVM Base to Stellar testnet
+const hookData = client.buildCctpHookData("GDEF...FORWARD_RECIPIENT");
+// pass hookData to EVM depositForBurnWithHook (mintRecipient = destinationCaller = CctpForwarder)
+const { message, attestation } = await client.pollCctpAttestation(evmTxHash, 6); // 6 = Base domain
+const { txHash: cctpTxHash } = await client.completeCctpInbound(caller, message, attestation);
+```
+
 #### React Invoice Hooks (`@stellar-sharpy/react`)
 
 ```tsx
