@@ -10,7 +10,7 @@ import {
 } from "@stellar/stellar-sdk";
 import { Server } from "@stellar/stellar-sdk/rpc";
 import { CallerNotCreatorError, DeadlinePassedError, InvoiceNotFoundError, InvoiceNotPendingError, OverpaymentError, DeadlineNotReachedError, PayerNotWhitelistedError, InvoiceFrozenError, InvoiceNotArchivableError, TrancheCapExceededError, BpsOutOfRangeError, RouteCycleError, NotApproverError, StreamingNotFoundError } from "./errors.js";
-import { normalizePageOpts, paginateIds } from "./paginationhelpers.js";
+import { normalizePageOpts, paginateIds, MAX_PAGE_SIZE } from "./paginationhelpers.js";
 
 /**
  * Placeholder account used for read-only contract simulations.
@@ -1017,6 +1017,44 @@ export class SharpyClient {
   ): Promise<{ ids: number[]; total: number; offset: number; limit: number; hasMore: boolean }> {
     const all = await this.getInvoicesByPayer(payer);
     return paginateIds(all, opts);
+  }
+
+  /**
+   * Yield creator invoice IDs page by page (`pageSize` per yield).
+   * Stops when `hasMore` is false — safe for large creator indexes.
+   */
+  async *iterateInvoicesByCreator(
+    creator: string,
+    opts?: { pageSize?: number }
+  ): AsyncGenerator<{ ids: number[]; total: number; offset: number; hasMore: boolean }> {
+    const pageSize = opts?.pageSize ?? MAX_PAGE_SIZE;
+    let offset = 0;
+    for (;;) {
+      const page = await this.getInvoicesByCreatorPaginated(creator, { limit: pageSize, offset });
+      yield { ids: page.ids, total: page.total, offset: page.offset, hasMore: page.hasMore };
+      if (!page.hasMore) return;
+      offset += page.ids.length;
+      if (page.ids.length === 0) return;
+    }
+  }
+
+  /**
+   * Yield payer invoice IDs page by page (`pageSize` per yield).
+   * Stops when `hasMore` is false — safe for large payer indexes.
+   */
+  async *iterateInvoicesByPayer(
+    payer: string,
+    opts?: { pageSize?: number }
+  ): AsyncGenerator<{ ids: number[]; total: number; offset: number; hasMore: boolean }> {
+    const pageSize = opts?.pageSize ?? MAX_PAGE_SIZE;
+    let offset = 0;
+    for (;;) {
+      const page = await this.getInvoicesByPayerPaginated(payer, { limit: pageSize, offset });
+      yield { ids: page.ids, total: page.total, offset: page.offset, hasMore: page.hasMore };
+      if (!page.hasMore) return;
+      offset += page.ids.length;
+      if (page.ids.length === 0) return;
+    }
   }
 
   /**
