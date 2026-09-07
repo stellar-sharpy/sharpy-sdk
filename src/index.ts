@@ -1,6 +1,11 @@
 export { SharpyClient } from "./client.js";
 export { normalizePageOpts, paginateIds, MAX_PAGE_SIZE } from "./paginationhelpers.js";
 export type { PageOpts, NormalizedPage } from "./paginationhelpers.js";
+export { withRetries, backoffDelayMs } from "./retrylogic.js";
+export type { RetryOpts } from "./retrylogic.js";
+export { normalizePollConfig, withTimeout, TimeoutError, DEFAULT_INTERVAL_MS, DEFAULT_MAX_ATTEMPTS, MAX_ATTEMPTS_CAP } from "./timeoutconfig.js";
+export type { PollConfig, NormalizedPoll } from "./timeoutconfig.js";
+export { xlmToStroops, stroopsToXlm, addFeeMargin, feeWithinBudget, STROOPS_PER_XLM } from "./estimatefees.js";
 export type {
   SharpyClientConfig,
   CreateInvoiceParams,
