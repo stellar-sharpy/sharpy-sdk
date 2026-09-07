@@ -10,6 +10,7 @@ import {
 } from "@stellar/stellar-sdk";
 import { Server } from "@stellar/stellar-sdk/rpc";
 import { CallerNotCreatorError, DeadlinePassedError, InvoiceNotFoundError, InvoiceNotPendingError, OverpaymentError, DeadlineNotReachedError, PayerNotWhitelistedError, InvoiceFrozenError, InvoiceNotArchivableError, TrancheCapExceededError, BpsOutOfRangeError, RouteCycleError, NotApproverError, StreamingNotFoundError } from "./errors.js";
+import { normalizePageOpts, paginateIds } from "./paginationhelpers.js";
 
 /**
  * Placeholder account used for read-only contract simulations.
@@ -892,8 +893,7 @@ export class SharpyClient {
     const raw = scValToNative((sim as any).result.retval) as any[];
     const ids = raw.map(Number);
     if (opts?.offset !== undefined || opts?.limit !== undefined) {
-      const offset = opts.offset ?? 0;
-      const limit = opts.limit ?? ids.length;
+      const { offset, limit } = normalizePageOpts(ids.length, opts);
       return ids.slice(offset, offset + limit);
     }
     return ids;
@@ -982,8 +982,7 @@ export class SharpyClient {
     const raw = scValToNative((sim as any).result.retval) as any[];
     const ids = raw.map(Number);
     if (opts?.offset !== undefined || opts?.limit !== undefined) {
-      const offset = opts.offset ?? 0;
-      const limit = opts.limit ?? ids.length;
+      const { offset, limit } = normalizePageOpts(ids.length, opts);
       return ids.slice(offset, offset + limit);
     }
     return ids;
