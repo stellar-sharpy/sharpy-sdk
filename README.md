@@ -386,7 +386,7 @@ interface AuditEntry {
 ## Build & Development
 
 ```bash
-npm run build    # tsup — ESM + CJS + TypeScript declarations
+npm run build    # tsup — ESM + CJS + TypeScript declarations (verified green for 0.3.0)
 npm run dev      # watch mode
 npm run lint     # tsc --noEmit
 npm test         # vitest
