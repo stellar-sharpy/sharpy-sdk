@@ -1131,12 +1131,13 @@ export class SharpyClient {
    * @param sourceDomain - CCTP domain of the source chain (e.g. 0=Ethereum, 3=Arbitrum, 6=Base)
    * @param opts.intervalMs - Polling interval in ms (default 5000)
    * @param opts.maxAttempts - Max polling attempts before giving up (default 60 = 5 minutes)
+   * @param opts.onAttempt - Progress callback invoked after each poll with (attempt, maxAttempts)
    * @returns { message, attestation } hex strings plus `attempts` (polls used) and `elapsedMs` (wall time)
    */
   async pollCctpAttestation(
     sourceTxHash: string,
     sourceDomain: number,
-    opts?: { intervalMs?: number; maxAttempts?: number }
+    opts?: { intervalMs?: number; maxAttempts?: number; onAttempt?: (attempt: number, maxAttempts: number) => void }
   ): Promise<{ message: string; attestation: string; attempts: number; elapsedMs: number }> {
     const intervalMs = opts?.intervalMs ?? 5_000;
     const maxAttempts = opts?.maxAttempts ?? 60;
@@ -1164,6 +1165,7 @@ export class SharpyClient {
         }
       }
       if (attempt < maxAttempts - 1) {
+        opts?.onAttempt?.(attempt + 1, maxAttempts);
         await new Promise((r) => setTimeout(r, intervalMs));
       }
     }
