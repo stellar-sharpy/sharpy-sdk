@@ -1131,15 +1131,16 @@ export class SharpyClient {
    * @param sourceDomain - CCTP domain of the source chain (e.g. 0=Ethereum, 3=Arbitrum, 6=Base)
    * @param opts.intervalMs - Polling interval in ms (default 5000)
    * @param opts.maxAttempts - Max polling attempts before giving up (default 60 = 5 minutes)
-   * @returns { message: string, attestation: string } — both hex strings
+   * @returns { message, attestation } hex strings plus `attempts` (polls used) and `elapsedMs` (wall time)
    */
   async pollCctpAttestation(
     sourceTxHash: string,
     sourceDomain: number,
     opts?: { intervalMs?: number; maxAttempts?: number }
-  ): Promise<{ message: string; attestation: string }> {
+  ): Promise<{ message: string; attestation: string; attempts: number; elapsedMs: number }> {
     const intervalMs = opts?.intervalMs ?? 5_000;
     const maxAttempts = opts?.maxAttempts ?? 60;
+    const startedAt = Date.now();
     const isTestnet = this.config.networkPassphrase.includes("Test SDF");
     const apiBase = isTestnet
       ? "https://iris-api-sandbox.circle.com"
@@ -1157,6 +1158,8 @@ export class SharpyClient {
           return {
             message: complete.message,
             attestation: complete.attestation,
+            attempts: attempt + 1,
+            elapsedMs: Date.now() - startedAt,
           };
         }
       }
