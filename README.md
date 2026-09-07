@@ -190,9 +190,11 @@ const { streamId, txHash } = await client.createStream({
   cancelable: true,
 });
 console.log(`Stream #${streamId} created: ${txHash}`);
-await client.withdrawVested(publicKey, streamId);
-await client.topUpStream(publicKey, streamId, parseAmount("100"));
-await client.cancelStream(publicKey, streamId);
+
+// Streaming lifecycle — withdraw vested, top up, cancel
+await client.withdrawVested(publicKey, streamId); // withdrawVested(caller, streamId)
+await client.topUpStream(publicKey, streamId, parseAmount("100")); // topUpStream(caller, streamId, amount)
+await client.cancelStream(publicKey, streamId); // cancelStream(caller, streamId)
 ```
 
 #### React Streaming Hooks (`@stellar-sharpy/react`)
