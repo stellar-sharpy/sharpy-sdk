@@ -1,4 +1,6 @@
 export { SharpyClient } from "./client.js";
+export { normalizePageOpts, paginateIds, MAX_PAGE_SIZE } from "./paginationhelpers.js";
+export type { PageOpts, NormalizedPage } from "./paginationhelpers.js";
 export type {
   SharpyClientConfig,
   CreateInvoiceParams,
