@@ -1168,7 +1168,7 @@ export class SharpyClient {
       }
     }
     throw new Error(
-      `CCTP attestation not complete after ${maxAttempts} attempts (${(maxAttempts * intervalMs) / 1000}s). ` +
+      `CCTP attestation not complete after ${maxAttempts} attempts (${Date.now() - startedAt}ms elapsed). ` +
       `Check status at: https://iris-api${isTestnet ? "-sandbox" : ""}.circle.com/v2/messages/${sourceDomain}?transactionHash=${sourceTxHash}`
     );
   }
