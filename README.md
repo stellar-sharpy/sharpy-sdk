@@ -301,6 +301,7 @@ const { ids, total, creator, loading: listLoading } = useInvoicesByCreator(clien
 import { NETWORKS } from "@stellar-sharpy/sdk";
 
 // Testnet — pre-configured with deployed contract ID
+// CAEWQX36RLGP2WY6ACOREDJEIGELYV3HWWUPGV3CJMC27OWGQWZHTH6T
 const client = new SharpyClient(NETWORKS.testnet);
 // { rpcUrl, networkPassphrase, contractId }
 
