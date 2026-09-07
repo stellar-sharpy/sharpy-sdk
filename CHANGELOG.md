@@ -1,6 +1,7 @@
 # Changelog
 
 ## [Unreleased]
+- Retry, timeout and fee helper polish — `withRetries` exponential backoff, `normalizePollConfig`/`withTimeout`/`TimeoutError`, pure `xlmToStroops`/`stroopsToXlm`/`addFeeMargin`/`feeWithinBudget` fee math; barrel exports + 11 unit tests — feat/sdk-resilience-polish (closes #123)
 - CCTP attestation latency tracking — `pollCctpAttestation` returns `attempts`/`elapsedMs`, timeouts report actual elapsed ms, `onAttempt` progress callback; covered by stubbed-fetch unit tests — feat/sdk-cctp-latency (closes #120)
 - Copy-paste example snippets — `examples/` (create-and-pay, stream-lifecycle, CCTP inbound, paginated dashboard) with real client signatures, `examples:typecheck` script, README pointer — docs/sdk-examples (closes #121)
 - Unit tests for 0.3.0 methods — `test/unit` vitest suite (pagination bounds, error taxonomy, `mapContractError` routing table, multi-page walks); `mapContractError` exported for testability; `npm test` runs offline, `test:e2e` stays testnet-gated — test/sdk-030-coverage (closes #125)
