@@ -168,11 +168,16 @@ export interface Invoice {
 function mapContractError(message: string, invoiceId?: number): Error {
   const id = invoiceId ?? 0;
   const m = message.toLowerCase();
+  // "deadline has not passed" (early refund/dispute) must win over the
+  // generic "deadline has passed" rule below — checked first.
+  if (m.includes("has not passed")) return new DeadlineNotReachedError(id);
   if (m.includes("not found")) return new InvoiceNotFoundError(id);
   if (m.includes("deadline")) return new DeadlinePassedError(id);
   if (m.includes("not pending")) return new InvoiceNotPendingError(id);
   if (m.includes("overpayment") || m.includes("exceeds") || m.includes("remaining balance")) return new OverpaymentError(id);
-  if (m.includes("only creator can cancel")) return new CallerNotCreatorError(id);
+  // All creator-only guards (cancel, notes, tags, memo, metadata, discount,
+  // pause/resume, approvers, archive/unarchive, extend, whitelist, tranche).
+  if (m.includes("only creator can")) return new CallerNotCreatorError(id);
   return new Error(message);
 }
 
