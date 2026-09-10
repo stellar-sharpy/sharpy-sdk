@@ -1,6 +1,7 @@
 # Changelog
 
 ## [Unreleased]
+- Streaming lifecycle parity helpers — `validateCreateStreamParams/vestedAmountLinear/streamStatus` linear-vest math with cliff/cancelled handling plus lifecycle state; barrel exports + unit tests — feat/sdk-stream-parity (closes #134)
 - TTL + expiry helpers — `ttlHint/expiresInSec/isInvoiceExpired/needsTtlBump/formatTtl` pure math plus `getTtlHint/isInvoiceExpiredById` view wrappers with offline fallback; barrel exports + unit tests — feat/sdk-ttl-hint (closes #133)
 - Fee-preview helpers — `estimateProtocolFee/previewFeeSplit/feeWithinTolerance/validateFeeBps` pure math plus `previewFeeForInvoice` view wrapper with offline fallback; barrel exports + unit tests — feat/sdk-fee-preview (closes #132)
 - Retry, timeout and fee helper polish — `withRetries` exponential backoff, `normalizePollConfig`/`withTimeout`/`TimeoutError`, pure `xlmToStroops`/`stroopsToXlm`/`addFeeMargin`/`feeWithinBudget` fee math; barrel exports + 11 unit tests — feat/sdk-resilience-polish (closes #123)

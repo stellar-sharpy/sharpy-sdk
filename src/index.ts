@@ -10,6 +10,8 @@ export { estimateProtocolFee, previewFeeSplit, feeWithinTolerance, validateFeeBp
 export type { FeePreview } from "./feepreview.js";
 export { ttlHint, expiresInSec, isInvoiceExpired, needsTtlBump, formatTtl, nowSec, TTL_BUMP_THRESHOLD_SEC } from "./ttlhint.js";
 export type { TtlHint } from "./ttlhint.js";
+export { validateCreateStreamParams, vestedAmountLinear, streamStatus } from "./streamhelpers.js";
+export type { StreamSchedule, StreamState } from "./streamhelpers.js";
 export type {
   SharpyClientConfig,
   CreateInvoiceParams,
