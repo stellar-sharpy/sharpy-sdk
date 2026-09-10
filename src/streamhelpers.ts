@@ -29,3 +29,20 @@ export function validateCreateStreamParams(p: {
     throw new StreamingInvalidArgsError("cliffAt must be within [startAt, endAt]");
   }
 }
+
+export function vestedAmountLinear(
+  totalAmount: bigint,
+  startAt: number,
+  endAt: number,
+  atSec: number,
+  cliffAt?: number
+): bigint {
+  if (totalAmount < 0n) throw new StreamingInvalidArgsError("negative totalAmount");
+  if (endAt <= startAt) throw new StreamingInvalidArgsError("endAt must be after startAt");
+  const cliff = cliffAt ?? startAt;
+  if (atSec < cliff) return 0n;
+  if (atSec >= endAt) return totalAmount;
+  const elapsed = BigInt(Math.floor(atSec) - Math.floor(startAt));
+  const duration = BigInt(Math.floor(endAt) - Math.floor(startAt));
+  return (totalAmount * elapsed) / duration;
+}
