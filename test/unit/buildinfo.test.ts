@@ -10,3 +10,12 @@ describe("buildinfo", () => {
     expect(buildTag()).toContain(SDK_VERSION);
   });
 });
+
+import { SDK_NAME } from "../../src/buildinfo";
+import { describe as d2, it as it2, expect as ex2 } from "vitest";
+
+d2("buildinfo edges", () => {
+  it2("exposes sdk name", () => {
+    ex2(SDK_NAME).toBe("@stellar-sharpy/sdk");
+  });
+});
