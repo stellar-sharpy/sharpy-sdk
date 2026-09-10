@@ -13,6 +13,8 @@ export type { TtlHint } from "./ttlhint.js";
 export { validateCreateStreamParams, vestedAmountLinear, streamStatus } from "./streamhelpers.js";
 export type { StreamSchedule, StreamState } from "./streamhelpers.js";
 export { validateBps, validateTranches, detectRouteCycle, validateWhitelist, normalizeFeeBps, sumTranchesBps, BPS_MAX } from "./routevalidation.js";
+export { filterClaimablePositive, summarizeClaimables, formatClaimRow, chunkScan, topClaimables } from "./treasuryhelpers.js";
+export type { ClaimRow } from "./treasuryhelpers.js";
 export type {
   SharpyClientConfig,
   CreateInvoiceParams,
