@@ -1,6 +1,7 @@
 # Changelog
 
 ## [Unreleased]
+- Pool-pay/batch input validation — `validatePoolPayments/validateBatchInvoices/validateRefundBatch/chunkArray` fail-fast guards wired into `poolPay/createBatch/refundBatch`; barrel exports + unit tests — feat/sdk-batch-validation (closes #137)
 - Treasury/claim convenience helpers — `filterClaimablePositive/summarizeClaimables/formatClaimRow/chunkScan/topClaimables` dashboard math for `getClaimableBalance/claim` scans; barrel exports + unit tests — feat/sdk-treasury-helpers (closes #136)
 - Route/tranche/whitelist/fee validation — `validateBps/validateTranches/detectRouteCycle/validateWhitelist/normalizeFeeBps` guards mapped to `BpsOutOfRangeError/TrancheCapExceededError/RouteCycleError/PayerNotWhitelistedError`; barrel exports + unit tests — feat/sdk-route-validation (closes #135)
 - Streaming lifecycle parity helpers — `validateCreateStreamParams/vestedAmountLinear/streamStatus` linear-vest math with cliff/cancelled handling plus lifecycle state; barrel exports + unit tests — feat/sdk-stream-parity (closes #134)

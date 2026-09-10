@@ -489,6 +489,8 @@ export class SharpyClient {
    * @returns Array of invoice IDs and transaction hash
    */
   async createBatch(creator: string, invoices: BatchInvoiceParams[]): Promise<{ invoiceIds: number[]; txHash: string }> {
+    const { validateBatchInvoices } = await import("./batchvalidation.js");
+    validateBatchInvoices(invoices as any);
     const batchArg = xdr.ScVal.scvVec(
       invoices.map((inv) =>
         xdr.ScVal.scvMap([
@@ -611,6 +613,8 @@ export class SharpyClient {
    * @returns Transaction hash
    */
   async poolPay(payer: string, payments: { invoiceId: number; amount: bigint }[]): Promise<{ txHash: string }> {
+    const { validatePoolPayments } = await import("./batchvalidation.js");
+    validatePoolPayments(payments);
     const paymentsArg = xdr.ScVal.scvVec(
       payments.map((p) =>
         xdr.ScVal.scvMap([
@@ -1375,6 +1379,8 @@ async getInvoiceMemoExt(invoiceId: number): Promise<InvoiceExtraMemo | null> {
   }
 
 async refundBatch(caller: string, invoiceIds: number[]): Promise<{count:number; txHash:string}> {
+    const { validateRefundBatch } = await import("./batchvalidation.js");
+    validateRefundBatch(invoiceIds);
     const idsArg = xdr.ScVal.scvVec(invoiceIds.map(id=> nativeToScVal(id,{type:"u64"})));
     const {txHash, result}=await this.buildAndSubmit(caller,"refund_batch",[new Address(caller).toScVal(), idsArg]);
     return {count: Number(scValToNative(result)), txHash};
