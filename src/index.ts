@@ -18,6 +18,8 @@ export type { ClaimRow } from "./treasuryhelpers.js";
 export { validatePoolPayments, validateBatchInvoices, validateRefundBatch, chunkArray, MAX_BATCH_SIZE, MAX_POOL_SIZE } from "./batchvalidation.js";
 export { classifyAttestationStatus, shouldRetryAttestation, formatCctpLatency, estimateAttestationWaitMs, cctpExplorerUrl } from "./cctphelpers.js";
 export type { AttestationStatus } from "./cctphelpers.js";
+export { pollUntil, pollWithTimeout, retryWithBudget } from "./pollhelpers.js";
+export type { PollOpts } from "./pollhelpers.js";
 export type {
   SharpyClientConfig,
   CreateInvoiceParams,
