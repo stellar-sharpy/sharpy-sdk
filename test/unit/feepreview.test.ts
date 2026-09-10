@@ -3,6 +3,7 @@ import {
   estimateProtocolFee,
   previewFeeSplit,
   validateFeeBps,
+  feeWithinTolerance,
   DEFAULT_PROTOCOL_FEE_BPS,
 } from "../../src/feepreview";
 
@@ -36,5 +37,23 @@ describe("previewFeeSplit", () => {
 
   it("validates bps through BpsOutOfRangeError", () => {
     expect(() => validateFeeBps(20_000)).toThrow(/out of range/);
+  });
+});
+
+describe("feeWithinTolerance", () => {
+  it("accepts exact match", () => {
+    expect(feeWithinTolerance(3000n, 3000n, 50)).toBe(true);
+  });
+
+  it("accepts drift inside tolerance", () => {
+    expect(feeWithinTolerance(10_000n, 10_050n, 100)).toBe(true);
+  });
+
+  it("rejects drift outside tolerance", () => {
+    expect(feeWithinTolerance(10_000n, 12_000n, 100)).toBe(false);
+  });
+
+  it("rejects negative inputs", () => {
+    expect(feeWithinTolerance(-1n, 100n, 100)).toBe(false);
   });
 });
