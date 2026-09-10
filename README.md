@@ -3,7 +3,7 @@
 ![npm](https://img.shields.io/npm/v/@stellar-sharpy/sdk)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?logo=typescript)
 ![stellar-sdk](https://img.shields.io/badge/stellar--sdk-16.0.1-6C63FF)
-![Modules](https://img.shields.io/badge/modules-35-00D4AA)
+![Modules](https://img.shields.io/badge/modules-45-00D4AA)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Version](https://img.shields.io/badge/version-0.3.0-6C63FF)
 [![Demo](https://img.shields.io/badge/Demo-Watch%20on%20Loom-00D4AA?logo=loom)](https://www.loom.com/share/09aa4a78e0c944dcab866a7036fde24d)
@@ -402,7 +402,7 @@ npm run test:e2e # vitest run test/e2e — testnet contract CAEWQX36 (requires R
 
 ## Module Overview
 
-The SDK ships 35 focused utility modules alongside the core client:
+The SDK ships 45 focused utility modules alongside the core client:
 
 | Module | Description |
 |--------|-------------|
@@ -433,6 +433,16 @@ The SDK ships 35 focused utility modules alongside the core client:
 | `memosupport.ts` | Transaction memo support |
 | `sorobanutils.ts` | Soroban utility functions |
 | `contractinterfaces.ts` | Contract interface types |
+| `feepreview.ts` | Fee-preview view wrapper + pure fee math |
+| `ttlhint.ts` | TTL hint/expiry pure math + view wrappers |
+| `streamhelpers.ts` | Streaming lifecycle + linear-vest math |
+| `routevalidation.ts` | Route/tranche/whitelist/fee validation guards |
+| `treasuryhelpers.ts` | Treasury/claim dashboard scan math |
+| `batchvalidation.ts` | Pool-pay/batch input validation guards |
+| `cctphelpers.ts` | CCTP attestation status + latency helpers |
+| `pollhelpers.ts` | Poll-until/timeout/retry-with-budget helpers |
+| `pagedviews.ts` | Paged creator/payer view wrappers + merge helpers |
+| `buildinfo.ts` | `SDK_VERSION`/`buildTag` export |
 
 ---
 
