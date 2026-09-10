@@ -870,6 +870,46 @@ export class SharpyClient {
   }
 
   /**
+   * Preview the protocol fee for a hypothetical payment (view `preview_fee_for_invoice`).
+   * Falls back to offline `amount * feeBps / 10_000` math when the contract
+   * does not expose the view yet, so dashboards never block on deployment skew.
+   * @param invoiceId Invoice ID to preview
+   * @param amount Hypothetical payment in stroops
+   * @param feeBps Protocol fee in bps (default 30 = 0.3%)
+   * @returns `{ fee, net }` — fee taken and net credited
+   */
+  async previewFeeForInvoice(
+    invoiceId: number,
+    amount: bigint,
+    feeBps: number = 30
+  ): Promise<{ fee: bigint; net: bigint }> {
+    const account = await this.server.getAccount(READ_ONLY_ACCOUNT);
+    const contract = new Contract(this.config.contractId);
+    const tx = new TransactionBuilder(account, { fee: BASE_FEE, networkPassphrase: this.config.networkPassphrase })
+      .addOperation(contract.call(
+        "preview_fee_for_invoice",
+        nativeToScVal(invoiceId, { type: "u64" }),
+        nativeToScVal(amount, { type: "i128" })
+      ))
+      .setTimeout(30)
+      .build();
+    try {
+      const sim = await this.server.simulateTransaction(tx);
+      if (!("error" in sim)) {
+        const raw = scValToNative((sim as any).result.retval) as any;
+        const fee = BigInt(raw?.fee ?? raw?.[0] ?? 0);
+        const net = BigInt(raw?.net ?? raw?.[1] ?? amount - fee);
+        return { fee, net };
+      }
+    } catch {
+      // fall through to offline estimate below
+    }
+    const { estimateProtocolFee } = await import("./feepreview.js");
+    const fee = estimateProtocolFee(amount, feeBps);
+    return { fee, net: amount - fee };
+  }
+
+  /**
    * Fetch all invoice IDs created by a specific address using the on-chain creator index.
    * Enables efficient dashboard pagination without scanning all invoice IDs.
    * The contract returns the full list; slicing is done client-side in the SDK.
