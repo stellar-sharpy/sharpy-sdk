@@ -17,3 +17,19 @@ export function validateTranches(tranchesBps: number[], invoiceId = 0): void {
   const sum = tranchesBps.reduce((a, b) => a + b, 0);
   if (sum > BPS_MAX) throw new TrancheCapExceededError(invoiceId);
 }
+
+export function detectRouteCycle(route: number[], invoiceId = 0): void {
+  const seen = new Set<number>();
+  for (const id of route) {
+    if (seen.has(id)) throw new RouteCycleError(invoiceId);
+    seen.add(id);
+  }
+  for (let i = 1; i < route.length; i++) {
+    if (route[i] === route[i - 1]) throw new RouteCycleError(invoiceId);
+  }
+}
+
+export function validateWhitelist(payer: string, whitelist: string[], invoiceId = 0): void {
+  if (whitelist.length === 0) return;
+  if (!whitelist.includes(payer)) throw new PayerNotWhitelistedError(invoiceId);
+}
