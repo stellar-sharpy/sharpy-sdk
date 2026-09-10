@@ -27,3 +27,26 @@ export async function pollUntil(
   }
   throw new Error(`pollUntil: condition not met after ${attempts} attempts`);
 }
+
+export async function pollWithTimeout(
+  check: () => Promise<boolean>,
+  timeoutMs: number,
+  opts?: PollOpts & { clock?: () => number }
+): Promise<{ attempts: number; elapsedMs: number }> {
+  const clock = opts?.clock ?? Date.now;
+  const startedAt = clock();
+  const intervalMs = opts?.intervalMs ?? 100;
+  const sleep = opts?.sleep ?? defaultSleep;
+  let attempts = 0;
+  for (;;) {
+    attempts += 1;
+    if (await check()) return { attempts, elapsedMs: clock() - startedAt };
+    if (clock() - startedAt >= timeoutMs) {
+      throw new TimeoutError(timeoutMs);
+    }
+    await sleep(intervalMs);
+    if (clock() - startedAt >= timeoutMs) {
+      throw new TimeoutError(timeoutMs);
+    }
+  }
+}
