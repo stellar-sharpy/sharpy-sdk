@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { expiresInSec, isInvoiceExpired, ttlHint } from "../../src/ttlhint";
+import { expiresInSec, isInvoiceExpired, needsTtlBump, formatTtl, ttlHint } from "../../src/ttlhint";
 
 describe("expiresInSec", () => {
   it("computes positive delta", () => {
@@ -30,5 +30,21 @@ describe("ttlHint", () => {
     expect(soon.needsBump).toBe(true);
     const far = ttlHint(1000 + 30 * 86400, 1000);
     expect(far.needsBump).toBe(false);
+  });
+});
+
+describe("needsTtlBump/formatTtl", () => {
+  it("detects bump window", () => {
+    expect(needsTtlBump(1000 + 100, 1000)).toBe(true);
+    expect(needsTtlBump(1000 + 30 * 86400, 1000)).toBe(false);
+    expect(needsTtlBump(500, 1000)).toBe(false);
+  });
+
+  it("formats human ttl", () => {
+    expect(formatTtl(ttlHint(500, 1000))).toBe("expired");
+    expect(formatTtl(ttlHint(1000 + 2 * 86400, 1000))).toBe("2d left");
+    expect(formatTtl(ttlHint(1000 + 3600, 1000))).toBe("1h left");
+    expect(formatTtl(ttlHint(1000 + 90, 1000))).toBe("1m left");
+    expect(formatTtl(ttlHint(1000 + 10, 1000))).toBe("10s left");
   });
 });
