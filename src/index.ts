@@ -16,6 +16,8 @@ export { validateBps, validateTranches, detectRouteCycle, validateWhitelist, nor
 export { filterClaimablePositive, summarizeClaimables, formatClaimRow, chunkScan, topClaimables } from "./treasuryhelpers.js";
 export type { ClaimRow } from "./treasuryhelpers.js";
 export { validatePoolPayments, validateBatchInvoices, validateRefundBatch, chunkArray, MAX_BATCH_SIZE, MAX_POOL_SIZE } from "./batchvalidation.js";
+export { classifyAttestationStatus, shouldRetryAttestation, formatCctpLatency, estimateAttestationWaitMs, cctpExplorerUrl } from "./cctphelpers.js";
+export type { AttestationStatus } from "./cctphelpers.js";
 export type {
   SharpyClientConfig,
   CreateInvoiceParams,
