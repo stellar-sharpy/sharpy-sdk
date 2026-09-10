@@ -33,3 +33,13 @@ export function validateWhitelist(payer: string, whitelist: string[], invoiceId 
   if (whitelist.length === 0) return;
   if (!whitelist.includes(payer)) throw new PayerNotWhitelistedError(invoiceId);
 }
+
+export function normalizeFeeBps(input?: number, fallback = 30): number {
+  if (input === undefined) return fallback;
+  validateBps(input, "fee bps");
+  return input;
+}
+
+export function sumTranchesBps(tranchesBps: number[]): number {
+  return tranchesBps.reduce((a, b) => a + b, 0);
+}
