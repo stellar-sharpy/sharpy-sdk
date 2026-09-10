@@ -1,6 +1,7 @@
 # Changelog
 
 ## [Unreleased]
+- React hooks for new views — `useFeePreview/useTtlHint/usePagedInvoices` in `@stellar-sharpy/react` plus `normalizePagedViewOpts/mergePagedIds` SDK helpers; barrel exports + unit tests — feat/react-invoice-views (closes #140)
 - Retry/timeout edge helpers — `pollUntil/pollWithTimeout/retryWithBudget` with injectable sleep/clock, elapsed tracking and budget enforcement; barrel exports + unit tests — feat/sdk-poll-helpers (closes #139)
 - CCTP inbound resilience — `classifyAttestationStatus/shouldRetryAttestation/formatCctpLatency/estimateAttestationWaitMs/cctpExplorerUrl` pure helpers plus `examples/cctp-resilient.ts` runnable with latency reporting; barrel exports + unit tests — feat/sdk-cctp-resilience (closes #138)
 - Pool-pay/batch input validation — `validatePoolPayments/validateBatchInvoices/validateRefundBatch/chunkArray` fail-fast guards wired into `poolPay/createBatch/refundBatch`; barrel exports + unit tests — feat/sdk-batch-validation (closes #137)

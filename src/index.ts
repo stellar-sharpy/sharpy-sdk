@@ -20,6 +20,8 @@ export { classifyAttestationStatus, shouldRetryAttestation, formatCctpLatency, e
 export type { AttestationStatus } from "./cctphelpers.js";
 export { pollUntil, pollWithTimeout, retryWithBudget } from "./pollhelpers.js";
 export type { PollOpts } from "./pollhelpers.js";
+export { normalizePagedViewOpts, mergePagedIds } from "./pagedviews.js";
+export type { PagedViewOpts } from "./pagedviews.js";
 export type {
   SharpyClientConfig,
   CreateInvoiceParams,
