@@ -8,6 +8,8 @@ export type { PollConfig, NormalizedPoll } from "./timeoutconfig.js";
 export { xlmToStroops, stroopsToXlm, addFeeMargin, feeWithinBudget, STROOPS_PER_XLM } from "./estimatefees.js";
 export { estimateProtocolFee, previewFeeSplit, feeWithinTolerance, validateFeeBps, DEFAULT_PROTOCOL_FEE_BPS, FEE_BPS_DENOM } from "./feepreview.js";
 export type { FeePreview } from "./feepreview.js";
+export { ttlHint, expiresInSec, isInvoiceExpired, needsTtlBump, formatTtl, nowSec, TTL_BUMP_THRESHOLD_SEC } from "./ttlhint.js";
+export type { TtlHint } from "./ttlhint.js";
 export type {
   SharpyClientConfig,
   CreateInvoiceParams,
