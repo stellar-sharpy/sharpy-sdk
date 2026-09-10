@@ -438,6 +438,11 @@ The SDK ships 45 focused utility modules alongside the core client:
 | `streamhelpers.ts` | Streaming lifecycle + linear-vest math |
 | `routevalidation.ts` | Route/tranche/whitelist/fee validation guards |
 | `treasuryhelpers.ts` | Treasury/claim dashboard scan math |
+| `batchvalidation.ts` | Pool-pay/batch input validation guards |
+| `cctphelpers.ts` | CCTP attestation status + latency helpers |
+| `pollhelpers.ts` | Poll-until/timeout/retry-with-budget helpers |
+| `pagedviews.ts` | Paged creator/payer view wrappers + merge helpers |
+| `buildinfo.ts` | `SDK_VERSION`/`buildTag` export |
 
 ---
 
