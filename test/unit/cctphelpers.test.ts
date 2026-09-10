@@ -19,3 +19,18 @@ describe("cctphelpers core", () => {
     expect(formatCctpLatency(5_000, 1)).toBe("1 attempt in 5s");
   });
 });
+
+import { estimateAttestationWaitMs, cctpExplorerUrl } from "../../src/cctphelpers";
+import { describe as d2, it as it2, expect as ex2 } from "vitest";
+
+d2("cctphelpers edges", () => {
+  it2("estimates linear wait", () => {
+    ex2(estimateAttestationWaitMs(0, 5000)).toBe(5000);
+    ex2(estimateAttestationWaitMs(2, 5000)).toBe(15000);
+    ex2(estimateAttestationWaitMs(-1)).toBe(5000);
+  });
+  it2("builds explorer urls", () => {
+    ex2(cctpExplorerUrl(0, "0xabc", true)).toContain("sandbox");
+    ex2(cctpExplorerUrl(0, "0xabc", false)).not.toContain("sandbox");
+  });
+});
