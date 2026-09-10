@@ -910,6 +910,43 @@ export class SharpyClient {
   }
 
   /**
+   * TTL hint for an invoice — wraps `getInvoice` with offline `ttlHint` math.
+   * Tries the on-chain `ttl_hint` view first, falls back to deadline math so
+   * dashboards work even before the view is deployed.
+   */
+  async getTtlHint(invoiceId: number, atSec?: number): Promise<import("./ttlhint.js").TtlHint> {
+    const { ttlHint } = await import("./ttlhint.js");
+    try {
+      const account = await this.server.getAccount(READ_ONLY_ACCOUNT);
+      const contract = new Contract(this.config.contractId);
+      const tx = new TransactionBuilder(account, { fee: BASE_FEE, networkPassphrase: this.config.networkPassphrase })
+        .addOperation(contract.call("ttl_hint", nativeToScVal(invoiceId, { type: "u64" })))
+        .setTimeout(30)
+        .build();
+      const sim = await this.server.simulateTransaction(tx);
+      if (!("error" in sim)) {
+        const raw = scValToNative((sim as any).result.retval) as any;
+        if (raw && typeof raw === "object" && "expiresInSec" in raw) {
+          return raw as import("./ttlhint.js").TtlHint;
+        }
+      }
+    } catch {
+      // fallback below
+    }
+    const invoice = await this.getInvoice(invoiceId);
+    return ttlHint(invoice.deadline, atSec);
+  }
+
+  /**
+   * Returns true when the invoice deadline has passed (`is_invoice_expired` view
+   * with offline fallback). Convenience around `getTtlHint`.
+   */
+  async isInvoiceExpiredById(invoiceId: number, atSec?: number): Promise<boolean> {
+    const hint = await this.getTtlHint(invoiceId, atSec);
+    return hint.expired;
+  }
+
+  /**
    * Fetch all invoice IDs created by a specific address using the on-chain creator index.
    * Enables efficient dashboard pagination without scanning all invoice IDs.
    * The contract returns the full list; slicing is done client-side in the SDK.
