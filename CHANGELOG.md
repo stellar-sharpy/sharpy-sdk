@@ -1,6 +1,7 @@
 # Changelog
 
 ## [Unreleased]
+- Retry/timeout edge helpers — `pollUntil/pollWithTimeout/retryWithBudget` with injectable sleep/clock, elapsed tracking and budget enforcement; barrel exports + unit tests — feat/sdk-poll-helpers (closes #139)
 - CCTP inbound resilience — `classifyAttestationStatus/shouldRetryAttestation/formatCctpLatency/estimateAttestationWaitMs/cctpExplorerUrl` pure helpers plus `examples/cctp-resilient.ts` runnable with latency reporting; barrel exports + unit tests — feat/sdk-cctp-resilience (closes #138)
 - Pool-pay/batch input validation — `validatePoolPayments/validateBatchInvoices/validateRefundBatch/chunkArray` fail-fast guards wired into `poolPay/createBatch/refundBatch`; barrel exports + unit tests — feat/sdk-batch-validation (closes #137)
 - Treasury/claim convenience helpers — `filterClaimablePositive/summarizeClaimables/formatClaimRow/chunkScan/topClaimables` dashboard math for `getClaimableBalance/claim` scans; barrel exports + unit tests — feat/sdk-treasury-helpers (closes #136)
