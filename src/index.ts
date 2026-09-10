@@ -12,6 +12,7 @@ export { ttlHint, expiresInSec, isInvoiceExpired, needsTtlBump, formatTtl, nowSe
 export type { TtlHint } from "./ttlhint.js";
 export { validateCreateStreamParams, vestedAmountLinear, streamStatus } from "./streamhelpers.js";
 export type { StreamSchedule, StreamState } from "./streamhelpers.js";
+export { validateBps, validateTranches, detectRouteCycle, validateWhitelist, normalizeFeeBps, sumTranchesBps, BPS_MAX } from "./routevalidation.js";
 export type {
   SharpyClientConfig,
   CreateInvoiceParams,
