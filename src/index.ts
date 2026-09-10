@@ -22,6 +22,7 @@ export { pollUntil, pollWithTimeout, retryWithBudget } from "./pollhelpers.js";
 export type { PollOpts } from "./pollhelpers.js";
 export { normalizePagedViewOpts, mergePagedIds } from "./pagedviews.js";
 export type { PagedViewOpts } from "./pagedviews.js";
+export { SDK_VERSION, SDK_NAME, buildTag } from "./buildinfo.js";
 export type {
   SharpyClientConfig,
   CreateInvoiceParams,
