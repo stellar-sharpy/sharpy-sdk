@@ -29,3 +29,17 @@ describe("validateBatchInvoices", () => {
     expect(chunkArray([1, 2, 3, 4, 5], 2)).toEqual([[1, 2], [3, 4], [5]]);
   });
 });
+
+import { validateRefundBatch } from "../../src/batchvalidation";
+import { describe as d2, it as it2, expect as ex2 } from "vitest";
+
+d2("validateRefundBatch", () => {
+  it2("accepts sane ids", () => {
+    ex2(() => validateRefundBatch([1, 2, 3])).not.toThrow();
+  });
+  it2("rejects empty/oversized/bad ids", () => {
+    ex2(() => validateRefundBatch([])).toThrow(/non-empty/);
+    ex2(() => validateRefundBatch(Array.from({ length: 11 }, (_, i) => i))).toThrow(/at most/);
+    ex2(() => validateRefundBatch([-1])).toThrow(/Invalid/);
+  });
+});
