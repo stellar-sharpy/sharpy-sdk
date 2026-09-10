@@ -50,3 +50,32 @@ export async function pollWithTimeout(
     }
   }
 }
+
+export async function retryWithBudget<T>(
+  fn: () => Promise<T>,
+  opts?: { maxAttempts?: number; budgetMs?: number; sleep?: (ms: number) => Promise<void>; clock?: () => number; baseDelayMs?: number }
+): Promise<{ result: T; attempts: number }> {
+  const maxAttempts = opts?.maxAttempts ?? 3;
+  const budgetMs = opts?.budgetMs ?? 5_000;
+  const sleep = opts?.sleep ?? defaultSleep;
+  const clock = opts?.clock ?? Date.now;
+  const baseDelayMs = opts?.baseDelayMs ?? 100;
+  const startedAt = clock();
+  let lastErr: unknown;
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      const result = await fn();
+      return { result, attempts: attempt };
+    } catch (err) {
+      lastErr = err;
+      if (attempt === maxAttempts) break;
+      const elapsed = clock() - startedAt;
+      const delay = baseDelayMs * 2 ** (attempt - 1);
+      if (elapsed + delay > budgetMs) {
+        throw new TimeoutError(budgetMs);
+      }
+      await sleep(delay);
+    }
+  }
+  throw lastErr;
+}
