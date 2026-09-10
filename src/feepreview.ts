@@ -19,3 +19,23 @@ export function estimateProtocolFee(amount: bigint, feeBps: number = DEFAULT_PRO
   validateFeeBps(feeBps);
   return (amount * BigInt(feeBps)) / BigInt(FEE_BPS_DENOM);
 }
+
+export interface FeePreview {
+  gross: bigint;
+  fee: bigint;
+  net: bigint;
+  feeBps: number;
+}
+
+export function previewFeeSplit(amount: bigint, feeBps: number = DEFAULT_PROTOCOL_FEE_BPS): FeePreview {
+  const fee = estimateProtocolFee(amount, feeBps);
+  return { gross: amount, fee, net: amount - fee, feeBps };
+}
+
+export function feeWithinTolerance(quotedFee: bigint, actualFee: bigint, toleranceBps: number): boolean {
+  if (quotedFee < 0n || actualFee < 0n) return false;
+  if (!Number.isFinite(toleranceBps) || toleranceBps < 0) return false;
+  const diff = quotedFee > actualFee ? quotedFee - actualFee : actualFee - quotedFee;
+  const denom = quotedFee === 0n ? 1n : quotedFee;
+  return (diff * BigInt(FEE_BPS_DENOM)) / denom <= BigInt(Math.floor(toleranceBps));
+}
