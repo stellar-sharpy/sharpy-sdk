@@ -18,3 +18,19 @@ describe("mergePagedIds", () => {
     expect(mergePagedIds([{ ids: [1, 2] }, { ids: [2, 3] }])).toEqual([1, 2, 3]);
   });
 });
+
+import { describe as d2, it as it2, expect as ex2 } from "vitest";
+
+d2("pagedviews edges", () => {
+  it2("handles invalid limits", async () => {
+    const { normalizePagedViewOpts: n } = await import("../../src/pagedviews");
+    ex2(n({ limit: NaN }).limit).toBeUndefined();
+    ex2(n({ limit: 0 }).limit).toBeUndefined();
+    ex2(n({ offset: 2.9 }).offset).toBe(2);
+  });
+  it2("merges empty pages", async () => {
+    const { mergePagedIds: m } = await import("../../src/pagedviews");
+    ex2(m([])).toEqual([]);
+    ex2(m([{ ids: [] }])).toEqual([]);
+  });
+});
