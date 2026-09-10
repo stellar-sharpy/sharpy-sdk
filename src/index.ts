@@ -6,6 +6,8 @@ export type { RetryOpts } from "./retrylogic.js";
 export { normalizePollConfig, withTimeout, TimeoutError, DEFAULT_INTERVAL_MS, DEFAULT_MAX_ATTEMPTS, MAX_ATTEMPTS_CAP } from "./timeoutconfig.js";
 export type { PollConfig, NormalizedPoll } from "./timeoutconfig.js";
 export { xlmToStroops, stroopsToXlm, addFeeMargin, feeWithinBudget, STROOPS_PER_XLM } from "./estimatefees.js";
+export { estimateProtocolFee, previewFeeSplit, feeWithinTolerance, validateFeeBps, DEFAULT_PROTOCOL_FEE_BPS, FEE_BPS_DENOM } from "./feepreview.js";
+export type { FeePreview } from "./feepreview.js";
 export type {
   SharpyClientConfig,
   CreateInvoiceParams,
