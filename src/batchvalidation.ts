@@ -24,3 +24,27 @@ export function validatePoolPayments(payments: { invoiceId: number; amount: bigi
     seen.add(p.invoiceId);
   }
 }
+
+export function validateBatchInvoices(
+  invoices: { recipients: { address: string; amount: bigint }[]; deadline: number }[]
+): void {
+  if (!Array.isArray(invoices) || invoices.length === 0) throw new Error("invoices must be a non-empty array");
+  if (invoices.length > MAX_BATCH_SIZE) throw new Error(`create_batch supports at most ${MAX_BATCH_SIZE} invoices`);
+  for (const [i, inv] of invoices.entries()) {
+    if (!Array.isArray(inv.recipients) || inv.recipients.length === 0) {
+      throw new Error(`Invoice ${i}: at least one recipient required`);
+    }
+    if (!Number.isFinite(inv.deadline) || inv.deadline <= 0) throw new Error(`Invoice ${i}: invalid deadline`);
+    for (const r of inv.recipients) {
+      if (r.amount <= 0n) throw new Error(`Invoice ${i}: recipient amount must be positive`);
+    }
+  }
+}
+
+export function validateRefundBatch(invoiceIds: number[]): void {
+  if (!Array.isArray(invoiceIds) || invoiceIds.length === 0) throw new Error("invoiceIds must be non-empty");
+  if (invoiceIds.length > MAX_BATCH_SIZE) throw new Error(`refund_batch supports at most ${MAX_BATCH_SIZE} invoices`);
+  for (const id of invoiceIds) {
+    if (!Number.isInteger(id) || id < 0) throw new Error(`Invalid invoiceId: ${id}`);
+  }
+}
