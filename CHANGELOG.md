@@ -1,6 +1,7 @@
 # Changelog
 
 ## [Unreleased]
+- Runnable examples + build proof — `examples/treasury-dashboard.ts` + `examples/invoice-walk.ts` with README rows, `docs/PUBLISH_CHECKLIST.md` dry-run guide, `SDK_VERSION/buildTag` export; `examples:typecheck` + tsup build green — feat/sdk-examples-build (closes #141)
 - React hooks for new views — `useFeePreview/useTtlHint/usePagedInvoices` in `@stellar-sharpy/react` plus `normalizePagedViewOpts/mergePagedIds` SDK helpers; barrel exports + unit tests — feat/react-invoice-views (closes #140)
 - Retry/timeout edge helpers — `pollUntil/pollWithTimeout/retryWithBudget` with injectable sleep/clock, elapsed tracking and budget enforcement; barrel exports + unit tests — feat/sdk-poll-helpers (closes #139)
 - CCTP inbound resilience — `classifyAttestationStatus/shouldRetryAttestation/formatCctpLatency/estimateAttestationWaitMs/cctpExplorerUrl` pure helpers plus `examples/cctp-resilient.ts` runnable with latency reporting; barrel exports + unit tests — feat/sdk-cctp-resilience (closes #138)
