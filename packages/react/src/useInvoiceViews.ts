@@ -101,3 +101,56 @@ export function useTtlHint(
 
   return { ...state, loading, error, refresh };
 }
+
+export interface UsePagedInvoicesResult {
+  ids: number[];
+  total: number | null;
+  hasMore: boolean;
+  loading: boolean;
+  error: Error | null;
+  refresh: () => Promise<void>;
+}
+
+/** Paged creator invoices via `getInvoicesByCreatorPaginated`. */
+export function usePagedInvoices(
+  client: SharpyClient,
+  creator: string | null | undefined,
+  opts: { limit?: number; offset?: number; refreshInterval?: number } = {}
+): UsePagedInvoicesResult {
+  const { limit, offset, refreshInterval } = opts;
+  const [ids, setIds] = useState<number[]>([]);
+  const [total, setTotal] = useState<number | null>(null);
+  const [hasMore, setHasMore] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+
+  const refresh = useCallback(async () => {
+    if (!creator) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const page = await client.getInvoicesByCreatorPaginated(creator, { limit, offset });
+      setIds(page.ids);
+      setTotal(page.total);
+      setHasMore(page.hasMore);
+    } catch (e) {
+      setError(e instanceof Error ? e : new Error(String(e)));
+      setIds([]);
+      setTotal(null);
+    } finally {
+      setLoading(false);
+    }
+  }, [client, creator, limit, offset]);
+
+  useEffect(() => {
+    void refresh();
+  }, [refresh]);
+
+  useEffect(() => {
+    if (!refreshInterval || !creator) return;
+    const t = setInterval(() => void refresh(), refreshInterval);
+    return () => clearInterval(t);
+  }, [refresh, refreshInterval, creator]);
+
+  return { ids, total, hasMore, loading, error, refresh };
+}
