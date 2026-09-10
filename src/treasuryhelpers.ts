@@ -34,3 +34,8 @@ export function chunkScan<T>(items: T[], chunkSize: number): T[][] {
   for (let i = 0; i < items.length; i += n) out.push(items.slice(i, i + n));
   return out;
 }
+
+export function topClaimables(rows: ClaimRow[], limit = 10): ClaimRow[] {
+  const n = Number.isFinite(limit) && limit > 0 ? Math.floor(limit) : 10;
+  return [...rows].sort((a, b) => (b.balance > a.balance ? 1 : b.balance < a.balance ? -1 : 0)).slice(0, n);
+}
