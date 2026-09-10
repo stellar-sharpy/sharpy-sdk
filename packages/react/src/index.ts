@@ -315,4 +315,6 @@ export { useStreaming } from "./useStreaming";
 export { useCreateStream, useWithdrawVested, useCancelStream, useTopUpStream, mapStreamError } from "./useStreamActions";
 export type { StreamActionOptions, StreamMutationResult, CreateStreamArgs } from "./useStreamActions";
 export { useCctpAttestation, useCompleteCctpInbound, useCctpHookData, mapCctpError } from "./useCCTP";
+export { useFeePreview, useTtlHint, usePagedInvoices } from "./useInvoiceViews";
+export type { UseFeePreviewResult, UseTtlHintResult, UsePagedInvoicesResult } from "./useInvoiceViews";
 export type { CctpHookOptions, CctpAttestation, CctpStatus } from "./useCCTP";
