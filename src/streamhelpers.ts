@@ -46,3 +46,24 @@ export function vestedAmountLinear(
   const duration = BigInt(Math.floor(endAt) - Math.floor(startAt));
   return (totalAmount * elapsed) / duration;
 }
+
+export type StreamState = "upcoming" | "cliff" | "vesting" | "matured" | "cancelled";
+
+export function streamStatus(
+  s: StreamSchedule,
+  atSec: number
+): { state: StreamState; vested: bigint; withdrawable: bigint } {
+  if (s.cancelled) {
+    const vested = vestedAmountLinear(s.totalAmount, s.startAt, s.endAt, atSec, s.cliffAt);
+    const withdrawn = s.withdrawn ?? 0n;
+    return { state: "cancelled", vested, withdrawable: vested > withdrawn ? vested - withdrawn : 0n };
+  }
+  const cliff = s.cliffAt ?? s.startAt;
+  let state: StreamState = "vesting";
+  if (atSec < s.startAt) state = "upcoming";
+  else if (atSec < cliff) state = "cliff";
+  else if (atSec >= s.endAt) state = "matured";
+  const vested = vestedAmountLinear(s.totalAmount, s.startAt, s.endAt, atSec, s.cliffAt);
+  const withdrawn = s.withdrawn ?? 0n;
+  return { state, vested, withdrawable: vested > withdrawn ? vested - withdrawn : 0n };
+}
