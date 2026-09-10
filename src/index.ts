@@ -15,6 +15,7 @@ export type { StreamSchedule, StreamState } from "./streamhelpers.js";
 export { validateBps, validateTranches, detectRouteCycle, validateWhitelist, normalizeFeeBps, sumTranchesBps, BPS_MAX } from "./routevalidation.js";
 export { filterClaimablePositive, summarizeClaimables, formatClaimRow, chunkScan, topClaimables } from "./treasuryhelpers.js";
 export type { ClaimRow } from "./treasuryhelpers.js";
+export { validatePoolPayments, validateBatchInvoices, validateRefundBatch, chunkArray, MAX_BATCH_SIZE, MAX_POOL_SIZE } from "./batchvalidation.js";
 export type {
   SharpyClientConfig,
   CreateInvoiceParams,
