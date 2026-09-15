@@ -5,7 +5,7 @@
 ![stellar-sdk](https://img.shields.io/badge/stellar--sdk-16.0.1-6C63FF)
 ![Modules](https://img.shields.io/badge/modules-45-00D4AA)
 ![License](https://img.shields.io/badge/license-MIT-green)
-![Version](https://img.shields.io/badge/version-0.3.0-6C63FF)
+![Version](https://img.shields.io/badge/version-0.4.0-6C63FF)
 [![Demo](https://img.shields.io/badge/Demo-Watch%20on%20Loom-00D4AA?logo=loom)](https://www.loom.com/share/09aa4a78e0c944dcab866a7036fde24d)
 
 TypeScript SDK for the **Sharpy** advanced split payment contract on Stellar Soroban. Wraps all contract interactions, wallet integration, and x402 agentic payment support into a clean, fully-typed API.
@@ -306,7 +306,7 @@ const { ids, total, creator, loading: listLoading } = useInvoicesByCreator(clien
 import { NETWORKS } from "@stellar-sharpy/sdk";
 
 // Testnet — pre-configured with deployed contract ID
-// CAEWQX36RLGP2WY6ACOREDJEIGELYV3HWWUPGV3CJMC27OWGQWZHTH6T
+// CC7A47PH7MTE4FVYOLN35JAWFL45IVTRS3VMWXJINAM2KUQ6JDEYQPXK (v0.4.0, 2026-09-15)
 const client = new SharpyClient(NETWORKS.testnet);
 // { rpcUrl, networkPassphrase, contractId }
 
@@ -391,11 +391,11 @@ interface AuditEntry {
 ## Build & Development
 
 ```bash
-npm run build    # tsup — ESM + CJS + TypeScript declarations (verified green for 0.3.0)
+npm run build    # tsup — ESM + CJS + TypeScript declarations (verified green for 0.4.0)
 npm run dev      # watch mode
 npm run lint     # tsc --noEmit
 npm test         # vitest run test/unit — pagination bounds, error taxonomy, mapContractError table (no network)
-npm run test:e2e # vitest run test/e2e — testnet contract CAEWQX36 (requires RPC access)
+npm run test:e2e # vitest run test/e2e — testnet contract CC7A47PH (requires RPC access)
 ```
 
 ---

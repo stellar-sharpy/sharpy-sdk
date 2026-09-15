@@ -1,7 +1,7 @@
 # SDK examples
 
 Runnable copy-paste snippets against testnet contract
-`CAEWQX36RLGP2WY6ACOREDJEIGELYV3HWWUPGV3CJMC27OWGQWZHTH6T`.
+`CC7A47PH7MTE4FVYOLN35JAWFL45IVTRS3VMWXJINAM2KUQ6JDEYQPXK` (v0.4.0).
 
 | File | Flow |
 | ---- | ---- |
