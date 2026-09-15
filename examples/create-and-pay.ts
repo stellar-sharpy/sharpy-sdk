@@ -4,7 +4,7 @@
  * Run:  npx tsx examples/create-and-pay.ts
  * Env:  CREATOR_SECRET, PAYER_SECRET, TOKEN (SAC address), RECIPIENT (default: creator)
  *
- * Uses the pre-configured testnet contract CAEWQX36 via NETWORKS.testnet.
+ * Uses the pre-configured testnet contract CC7A47PH via NETWORKS.testnet.
  */
 import { SharpyClient, NETWORKS } from "../src/index.js";
 
